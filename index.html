@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoKm - Controle de Consumo & Combustível</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-emerald-500/20 selection:text-emerald-300">
+
+  <!-- CABEÇALHO -->
+  <header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-slate-950 font-black shadow-md shadow-emerald-500/10">
+          ⛽
+        </div>
+        <div>
+          <span class="text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
+            AutoKm <span class="text-xs font-semibold text-emerald-400 bg-emerald-950/80 border border-emerald-800 px-1.5 py-0.5 rounded">Flex</span>
+          </span>
+        </div>
+      </div>
+
+      <button onclick="abrirModal()" class="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs sm:text-sm shadow-sm transition-all cursor-pointer">
+        + Abastecer
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="max-w-6xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6 flex-1">
+
+    <!-- BANNER DOS SEUS DADOS (18 A 26/10) -->
+    <div class="bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 border border-emerald-500/30 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+      <div class="space-y-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            CICLO ENCERRADO (18 a 26/10)
+          </span>
+          <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">
+            GASOLINA NOVA NO TANQUE (26/10)
+          </span>
+        </div>
+
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
+            <span>Média do ciclo concluído (com os R$ 50 do dia 18):</span>
+            <span class="font-mono text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800">
+              33,2 km/L
+            </span>
+          </h2>
+          <p class="text-xs text-slate-300 mt-1 max-w-3xl leading-relaxed">
+            Com os <strong>R$ 50,00</strong> abastecidos no dia 18, você rodou <strong>231 km</strong> (66 km descendo a serra + 165 km da semana de trabalho: 5 dias × 33 km ida e volta) durante <strong>8 dias</strong>. Custo de apenas <strong>R$ 0,22 por km rodado</strong>.
+          </p>
+        </div>
+
+        <!-- Gasolina nova no tanque -->
+        <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 text-xs space-y-1">
+          <div class="flex items-center justify-between text-teal-300 font-semibold">
+            <span>Gasolina Nova de Hoje (26/10): R$ 42,99 (5,98 Litros a R$ 7,19/L)</span>
+            <span class="text-[10px] font-mono bg-teal-950 px-2 py-0.5 rounded border border-teal-800">
+              0 km rodados (Em uso)
+            </span>
+          </div>
+          <p class="text-slate-400 text-[11px]">
+            Essa gasolina está no tanque agora! Com a sua média de 33,2 km/L, a autonomia estimada é de <strong>~198 km</strong> (~6 dias úteis de trabalho).
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-4 text-xs text-slate-300 pt-1 font-mono">
+          <span>Total rodado anterior: <strong class="text-white">231 km</strong></span>
+          <span class="text-slate-600">·</span>
+          <span>Custo por km: <strong class="text-amber-400">R$ 0,22 / km</strong></span>
+          <span class="text-slate-600">·</span>
+          <span>Ritmo: <strong class="text-teal-300">28,9 km/dia (~R$ 6,25/dia)</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARDS DE RESUMO -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="cards-kpi"></div>
+
+    <!-- NAVEGAÇÃO POR ABAS -->
+    <div class="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-2">
+      <button onclick="trocarAba('tabela')" id="tab-btn-tabela" class="px-4 py-2 rounded-lg text-xs font-semibold transition-colors bg-slate-800 text-emerald-400">
+        Histórico de Abastecimentos
+      </button>
+      <button onclick="trocarAba('simulador')" id="tab-btn-simulador" class="px-4 py-2 rounded-lg text-xs font-semibold transition-colors text-slate-400 hover:text-white">
+        Simulador Km & Dias
+      </button>
+      <button onclick="trocarAba('etanol')" id="tab-btn-etanol" class="px-4 py-2 rounded-lg text-xs font-semibold transition-colors text-slate-400 hover:text-white">
+        Etanol vs Gasolina
+      </button>
+    </div>
+
+    <!-- ABA 1: TABELA -->
+    <section id="aba-tabela" class="space-y-4">
+      <div class="bg-slate-900/80 border border-slate-800 rounded-xl overflow-hidden">
+        <div class="p-4 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="text-sm font-bold text-white">Registros de Abastecimento</h3>
+            <p class="text-[11px] text-slate-400">Cálculo de km/L, custos e médias</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="exportarCSV()" class="px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-950 border border-slate-800 rounded-lg transition-colors cursor-pointer">
+              📥 Baixar Planilha (CSV)
+            </button>
+            <button onclick="abrirModal()" class="px-3 py-1.5 text-xs font-semibold text-slate-950 bg-emerald-500 hover:bg-emerald-400 rounded-lg transition-colors cursor-pointer">
+              + Novo
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-950/60 border-b border-slate-800 text-slate-400 uppercase text-[10px] font-semibold">
+                <th class="py-3 px-4">Data</th>
+                <th class="py-3 px-3">Odômetro</th>
+                <th class="py-3 px-3">Km Rodados</th>
+                <th class="py-3 px-3">Litros</th>
+                <th class="py-3 px-3">Preço/L</th>
+                <th class="py-3 px-3">Total Pago</th>
+                <th class="py-3 px-3 text-center">Consumo (km/L)</th>
+                <th class="py-3 px-3">Custo/Km</th>
+                <th class="py-3 px-3">Dias / Ritmo</th>
+                <th class="py-3 px-3 text-right">Ação</th>
+              </tr>
+            </thead>
+            <tbody id="corpo-tabela" class="divide-y divide-slate-800/60 font-mono"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 2: SIMULADOR -->
+    <section id="aba-simulador" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-xl p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <h3 class="text-sm font-bold text-white">Simulador: "Coloquei X valor"</h3>
+            <p class="text-xs text-slate-400">Descubra quantos km vai rodar e quantos dias vai durar.</p>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Valor do Abastecimento (R$)</label>
+            <div class="flex gap-2 mb-2">
+              <button onclick="setSimValor(30)" class="flex-1 py-1 text-xs font-mono rounded border border-slate-800 bg-slate-950 text-slate-400 hover:text-white">R$ 30</button>
+              <button onclick="setSimValor(42.99)" class="flex-1 py-1 text-xs font-mono rounded border border-slate-800 bg-slate-950 text-slate-400 hover:text-white">R$ 42,99</button>
+              <button onclick="setSimValor(50)" class="flex-1 py-1 text-xs font-mono rounded border border-slate-800 bg-slate-950 text-slate-400 hover:text-white">R$ 50</button>
+              <button onclick="setSimValor(100)" class="flex-1 py-1 text-xs font-mono rounded border border-slate-800 bg-slate-950 text-slate-400 hover:text-white">R$ 100</button>
+            </div>
+            <input type="number" id="sim-valor" value="42.99" step="1" oninput="calcularSimulador()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-emerald-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Preço do Litro (R$/L)</label>
+            <input type="number" id="sim-preco" value="7.19" step="0.01" oninput="calcularSimulador()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-emerald-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Média do Veículo (km/L)</label>
+            <input type="number" id="sim-kml" value="33.2" step="0.1" oninput="calcularSimulador()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-emerald-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Quantos km roda por dia? (km/dia)</label>
+            <input type="number" id="sim-kmdia" value="33" step="1" oninput="calcularSimulador()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 bg-gradient-to-br from-slate-900 to-slate-950 border border-slate-800 rounded-xl p-6 flex flex-col justify-between">
+          <div>
+            <h4 class="text-sm font-bold text-white pb-3 border-b border-slate-800">Resultado da Autonomia</h4>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 my-5">
+              <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4">
+                <span class="text-xs text-slate-400">Autonomia Prevista</span>
+                <div class="text-3xl font-bold font-mono text-emerald-400 mt-1" id="res-autonomia">198 km</div>
+                <span class="text-[11px] text-slate-500" id="res-litros">5,98 Litros</span>
+              </div>
+
+              <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-4">
+                <span class="text-xs text-slate-400">Duração Estimada</span>
+                <div class="text-3xl font-bold font-mono text-teal-300 mt-1" id="res-dias">6,0 dias</div>
+                <span class="text-[11px] text-slate-500">no trajeto diário</span>
+              </div>
+            </div>
+
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between py-1.5 border-b border-slate-800">
+                <span class="text-slate-400">Custo por km rodado:</span>
+                <span class="font-mono text-white font-semibold" id="res-custokm">R$ 0,22 / km</span>
+              </div>
+              <div class="flex justify-between py-1.5 border-b border-slate-800">
+                <span class="text-slate-400">Custo diário:</span>
+                <span class="font-mono text-white font-semibold" id="res-custodia">R$ 7,16 / dia</span>
+              </div>
+              <div class="flex justify-between py-1.5 border-b border-slate-800">
+                <span class="text-slate-400">Previsão para acabar o combustível:</span>
+                <span class="font-mono text-emerald-300 font-semibold" id="res-datafim">01/11/2026</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABA 3: ETANOL VS GASOLINA -->
+    <section id="aba-etanol" class="hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+          <div class="border-b border-slate-800 pb-3">
+            <h3 class="text-sm font-bold text-white">Comparador Etanol x Gasolina</h3>
+            <p class="text-xs text-slate-400">Descubra qual compensa mais no posto hoje.</p>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Preço da Gasolina (R$/L)</label>
+            <input type="number" id="comp-gas" value="7.19" step="0.01" oninput="calcularEtanol()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Preço do Etanol (R$/L)</label>
+            <input type="number" id="comp-eta" value="4.59" step="0.01" oninput="calcularEtanol()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-xl p-6 flex flex-col justify-between">
+          <div>
+            <div id="box-veredito" class="p-4 rounded-xl border bg-blue-950/40 border-blue-800 text-blue-200 mb-4">
+              <span class="text-xs font-bold uppercase tracking-wider block opacity-75">Recomendação</span>
+              <h3 class="text-xl font-extrabold mt-0.5" id="txt-veredito">Abasteça com ETANOL</h3>
+              <p class="text-xs mt-1 opacity-90" id="txt-paridade">O etanol está a 63,8% do preço da gasolina.</p>
+            </div>
+
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between py-1.5 border-b border-slate-800">
+                <span class="text-slate-400">Preço máximo do Etanol para compensar:</span>
+                <span class="font-mono text-white font-semibold" id="txt-preco-max">R$ 5,03</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL DE ABASTECIMENTO -->
+  <div id="modal-abastecer" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 text-slate-100 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-base font-bold text-white">Registrar Abastecimento</h3>
+        <button onclick="fecharModal()" class="text-slate-400 hover:text-white text-lg cursor-pointer">&times;</button>
+      </div>
+
+      <form id="form-abastecer" onsubmit="salvarAbastecimento(event)" class="space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Data</label>
+            <input type="date" id="form-data" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-300 mb-1">Odômetro Atual (km)</label>
+            <input type="number" id="form-odo" required placeholder="Ex: 10450" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white font-mono focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2 bg-slate-950 p-3 rounded-lg border border-slate-800">
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-0.5">Litros (L)</label>
+            <input type="number" id="form-litros" step="0.01" oninput="autoCalcular('litros')" placeholder="5.98" class="w-full bg-slate-900 border border-slate-750 rounded p-1.5 text-xs font-mono text-white">
+          </div>
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-0.5">Preço/L (R$)</label>
+            <input type="number" id="form-preco" step="0.01" oninput="autoCalcular('preco')" value="7.19" class="w-full bg-slate-900 border border-slate-750 rounded p-1.5 text-xs font-mono text-white">
+          </div>
+          <div>
+            <label class="block text-[11px] text-slate-400 mb-0.5">Total (R$)</label>
+            <input type="number" id="form-total" step="0.01" oninput="autoCalcular('total')" placeholder="42.99" class="w-full bg-slate-900 border border-slate-750 rounded p-1.5 text-xs font-mono text-emerald-400 font-bold">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-300 mb-1">Posto / Observações (opcional)</label>
+          <input type="text" id="form-obs" placeholder="Ex: Posto Shell, semana de trabalho..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+          <button type="button" onclick="fecharModal()" class="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white rounded-lg cursor-pointer">Cancelar</button>
+          <button type="submit" class="px-4 py-2 text-xs font-semibold text-slate-950 bg-emerald-500 hover:bg-emerald-400 rounded-lg cursor-pointer">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT DO SISTEMA -->
+  <script>
+    const DADOS_INICIAIS = [
+      {
+        id: '1',
+        data: '2026-10-18',
+        odometro: 10000,
+        litros: 6.95,
+        preco: 7.19,
+        total: 50.00,
+        kmRodados: 231,
+        dias: 8,
+        mediaKml: 33.24,
+        custoKm: 0.22,
+        isAtual: false,
+        obs: 'Ciclo Concluído: 66km serra + 165km trabalho (5 dias x 33km)'
+      },
+      {
+        id: '2',
+        data: '2026-10-26',
+        odometro: 10231,
+        litros: 5.98,
+        preco: 7.19,
+        total: 42.99,
+        kmRodados: 0,
+        dias: 0,
+        mediaKml: null,
+        custoKm: null,
+        isAtual: true,
+        obs: 'Abastecido hoje (26/10). Gasolina nova no tanque.'
+      }
+    ];
+
+    let registros = JSON.parse(localStorage.getItem('autokm_dados')) || DADOS_INICIAIS;
+
+    function salvarStorage() {
+      localStorage.setItem('autokm_dados', JSON.stringify(registros));
+    }
+
+    function formatarMoeda(val) {
+      return (val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function formatarNumero(val, casas = 1) {
+      return (val || 0).toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
+    }
+
+    function formatarData(dataStr) {
+      if (!dataStr) return '';
+      const p = dataStr.split('-');
+      return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : dataStr;
+    }
+
+    function renderizar() {
+      const corpo = document.getElementById('corpo-tabela');
+      corpo.innerHTML = '';
+
+      registros.forEach((reg, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-900/60 transition-colors';
+
+        const statusTag = reg.isAtual 
+          ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30 ml-2">Novo no Tanque</span>` 
+          : '';
+
+        const kmInfo = reg.isAtual
+          ? `<span class="text-teal-300 text-[11px]">0 km (em uso)</span>`
+          : `<span class="text-emerald-400 font-bold">+${reg.kmRodados} km</span>`;
+
+        const mediaInfo = reg.isAtual
+          ? `<span class="px-2 py-0.5 rounded bg-teal-500/10 text-teal-300 text-[10px]">Prev: ~198 km</span>`
+          : (reg.mediaKml ? `<span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold">${formatarNumero(reg.mediaKml, 1)} km/L</span>` : '--');
+
+        const custoInfo = reg.isAtual 
+          ? `<span class="text-slate-500">Em rodagem</span>` 
+          : (reg.custoKm ? `${formatarMoeda(reg.custoKm)}` : '--');
+
+        const diasInfo = reg.isAtual
+          ? `<span class="text-teal-300 text-[10px]">Previsto: ~6 a 7 dias</span>`
+          : (reg.dias ? `${reg.dias} dias (~${Math.round(reg.kmRodados/reg.dias)} km/dia)` : '--');
+
+        tr.innerHTML = `
+          <td class="py-3 px-4 whitespace-nowrap text-white font-medium">
+            ${formatarData(reg.data)} ${statusTag}
+            <div class="text-[10px] text-slate-400">${reg.obs || ''}</div>
+          </td>
+          <td class="py-3 px-3 text-slate-200">${formatarNumero(reg.odometro, 0)} km</td>
+          <td class="py-3 px-3">${kmInfo}</td>
+          <td class="py-3 px-3 text-white">${formatarNumero(reg.litros, 2)} L</td>
+          <td class="py-3 px-3 text-slate-300">${formatarMoeda(reg.preco)}</td>
+          <td class="py-3 px-3 font-bold text-white">${formatarMoeda(reg.total)}</td>
+          <td class="py-3 px-3 text-center">${mediaInfo}</td>
+          <td class="py-3 px-3 text-slate-300">${custoInfo}</td>
+          <td class="py-3 px-3 text-slate-300">${diasInfo}</td>
+          <td class="py-3 px-3 text-right">
+            <button onclick="excluir(${idx})" class="text-slate-500 hover:text-rose-400 p-1" title="Excluir">&times;</button>
+          </td>
+        `;
+        corpo.appendChild(tr);
+      });
+
+      renderizarKPIs();
+      calcularSimulador();
+      calcularEtanol();
+    }
+
+    function renderizarKPIs() {
+      const container = document.getElementById('cards-kpi');
+      container.innerHTML = `
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <span class="text-[11px] text-slate-400 uppercase font-semibold">Média Ciclo Concluído</span>
+          <div class="text-2xl font-bold font-mono text-emerald-400 mt-1">33,2 <span class="text-xs">km/L</span></div>
+          <span class="text-[10px] text-slate-500">231 km com os R$ 50</span>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <span class="text-[11px] text-slate-400 uppercase font-semibold">Custo por Km Rodado</span>
+          <div class="text-2xl font-bold font-mono text-amber-400 mt-1">R$ 0,22 <span class="text-xs">/ km</span></div>
+          <span class="text-[10px] text-slate-500">super econômico</span>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <span class="text-[11px] text-slate-400 uppercase font-semibold">Gasolina Atual no Tanque</span>
+          <div class="text-2xl font-bold font-mono text-teal-300 mt-1">5,98 <span class="text-xs">Litros</span></div>
+          <span class="text-[10px] text-slate-500">R$ 42,99 (abastecido hoje 26/10)</span>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <span class="text-[11px] text-slate-400 uppercase font-semibold">Autonomia Prevista</span>
+          <div class="text-2xl font-bold font-mono text-white mt-1">~198 <span class="text-xs">km</span></div>
+          <span class="text-[10px] text-slate-500">duração estimada de ~6 a 7 dias</span>
+        </div>
+      `;
+    }
+
+    function abrirModal() {
+      document.getElementById('form-data').value = new Date().toISOString().split('T')[0];
+      const ultimoOdo = registros.length > 0 ? registros[registros.length - 1].odometro : 10231;
+      document.getElementById('form-odo').value = ultimoOdo;
+      document.getElementById('modal-abastecer').classList.remove('hidden');
+    }
+
+    function fecharModal() {
+      document.getElementById('modal-abastecer').classList.add('hidden');
+    }
+
+    function autoCalcular(campoModificado) {
+      const lit = parseFloat(document.getElementById('form-litros').value);
+      const pre = parseFloat(document.getElementById('form-preco').value);
+      const tot = parseFloat(document.getElementById('form-total').value);
+
+      if (campoModificado === 'litros' && lit && pre) {
+        document.getElementById('form-total').value = (lit * pre).toFixed(2);
+      } else if (campoModificado === 'total' && tot && pre) {
+        document.getElementById('form-litros').value = (tot / pre).toFixed(2);
+      } else if (campoModificado === 'preco' && tot && pre) {
+        document.getElementById('form-litros').value = (tot / pre).toFixed(2);
+      }
+    }
+
+    function salvarAbastecimento(e) {
+      e.preventDefault();
+      const data = document.getElementById('form-data').value;
+      const odo = parseFloat(document.getElementById('form-odo').value);
+      const litros = parseFloat(document.getElementById('form-litros').value);
+      const preco = parseFloat(document.getElementById('form-preco').value);
+      const total = parseFloat(document.getElementById('form-total').value);
+      const obs = document.getElementById('form-obs').value;
+
+      registros.push({
+        id: Date.now().toString(),
+        data,
+        odometro: odo,
+        litros,
+        preco,
+        total,
+        kmRodados: 0,
+        dias: 0,
+        mediaKml: null,
+        custoKm: null,
+        isAtual: true,
+        obs
+      });
+
+      salvarStorage();
+      renderizar();
+      fecharModal();
+    }
+
+    function excluir(idx) {
+      if (confirm('Deseja excluir este registro?')) {
+        registros.splice(idx, 1);
+        salvarStorage();
+        renderizar();
+      }
+    }
+
+    function trocarAba(aba) {
+      document.getElementById('aba-tabela').classList.add('hidden');
+      document.getElementById('aba-simulador').classList.add('hidden');
+      document.getElementById('aba-etanol').classList.add('hidden');
+
+      document.getElementById('tab-btn-tabela').className = 'px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white';
+      document.getElementById('tab-btn-simulador').className = 'px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white';
+      document.getElementById('tab-btn-etanol').className = 'px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-white';
+
+      document.getElementById(`aba-${aba}`).classList.remove('hidden');
+      document.getElementById(`tab-btn-${aba}`).className = 'px-4 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-emerald-400';
+    }
+
+    function setSimValor(v) {
+      document.getElementById('sim-valor').value = v;
+      calcularSimulador();
+    }
+
+    function calcularSimulador() {
+      const v = parseFloat(document.getElementById('sim-valor').value) || 0;
+      const p = parseFloat(document.getElementById('sim-preco').value) || 7.19;
+      const kml = parseFloat(document.getElementById('sim-kml').value) || 33.2;
+      const kmdia = parseFloat(document.getElementById('sim-kmdia').value) || 33;
+
+      const litros = p > 0 ? v / p : 0;
+      const range = litros * kml;
+      const dias = kmdia > 0 ? range / kmdia : 0;
+      const custoKm = range > 0 ? v / range : 0;
+      const custoDia = dias > 0 ? v / dias : 0;
+
+      const d = new Date();
+      d.setDate(d.getDate() + Math.round(dias));
+
+      document.getElementById('res-autonomia').innerText = `${Math.round(range)} km`;
+      document.getElementById('res-litros').innerText = `${litros.toFixed(2)} Litros`;
+      document.getElementById('res-dias').innerText = `${dias.toFixed(1)} dias`;
+      document.getElementById('res-custokm').innerText = formatarMoeda(custoKm) + ' / km';
+      document.getElementById('res-custodia').innerText = formatarMoeda(custoDia) + ' / dia';
+      document.getElementById('res-datafim').innerText = d.toLocaleDateString('pt-BR');
+    }
+
+    function calcularEtanol() {
+      const gas = parseFloat(document.getElementById('comp-gas').value) || 7.19;
+      const eta = parseFloat(document.getElementById('comp-eta').value) || 4.59;
+
+      const paridade = gas > 0 ? (eta / gas) * 100 : 0;
+      const compensaEtanol = paridade < 70;
+      const precoMax = gas * 0.7;
+
+      document.getElementById('txt-veredito').innerText = compensaEtanol ? 'Abasteça com ETANOL (Álcool)' : 'Abasteça com GASOLINA';
+      document.getElementById('txt-paridade').innerText = `O etanol está a ${paridade.toFixed(1)}% do preço da gasolina.`;
+      document.getElementById('txt-preco-max').innerText = formatarMoeda(precoMax);
+      document.getElementById('box-veredito').className = `p-4 rounded-xl border mb-4 ${compensaEtanol ? 'bg-blue-950/40 border-blue-800 text-blue-200' : 'bg-amber-950/40 border-amber-800 text-amber-200'}`;
+    }
+
+    function exportarCSV() {
+      let csv = 'Data;Odometro;Km Rodados;Litros;Preco Litro;Total Pago;Media kmL;Obs\n';
+      registros.forEach(r => {
+        csv += `${r.data};${r.odometro};${r.kmRodados};${r.litros};${r.preco};${r.total};${r.mediaKml || ''};"${r.obs || ''}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'abastecimentos.csv';
+      link.click();
+    }
+
+    // Inicialização
+    renderizar();
+  </script>
+</body>
+</html>

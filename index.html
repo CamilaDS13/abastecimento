@@ -53,7 +53,7 @@
       </nav>
 
       <div class="flex items-center gap-2">
-        <!-- Status de Sincronização em Nuvem (Clicável para forçar sincronia) -->
+        <!-- Status de Sincronização em Nuvem -->
         <button id="badge-cloud-status" onclick="forcarSincronizacao(true)" class="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 px-2.5 py-1.5 rounded-xl text-xs transition cursor-pointer" title="Clique para sincronizar com a Nuvem agora">
           <span id="dot-cloud-status" class="w-2 h-2 rounded-full bg-emerald-400"></span>
           <span id="txt-cloud-status" class="text-slate-300 font-mono text-[11px] hidden sm:inline">Nuvem Conectada</span>
@@ -83,7 +83,7 @@
               🏍️ HONDA FAN 2013 (Tanque ~15,1L)
             </span>
             <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              CICLO ENCERRADO
+              CICLO ATIVO
             </span>
             <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-teal-500/20 text-teal-300 border border-teal-500/30">
               GASOLINA NOVA
@@ -120,7 +120,7 @@
                   <div class="text-2xl sm:text-3xl font-extrabold text-amber-400 font-mono flex items-baseline gap-2 mt-0.5">
                     <span id="card-dias-restantes">~15</span>
                     <span class="text-sm font-semibold text-slate-300">dias</span>
-                    <span class="text-xs font-normal text-slate-400 font-sans" id="card-data-prevista">(11/11/2026)</span>
+                    <span class="text-xs font-normal text-slate-400 font-sans" id="card-data-prevista"></span>
                   </div>
                 </div>
               </div>
@@ -333,7 +333,312 @@
       </div>
     </div>
 
+    <!-- SEÇÃO: SIMULADOR KM & DIAS -->
+    <div id="aba-simulador" class="space-y-4 hidden">
+      <div class="bg-gradient-to-r from-teal-950/40 via-slate-900 to-slate-900 border border-teal-500/30 rounded-2xl p-5 shadow-lg">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <span>🧮 Simulador de Autonomia & Custos (Fan 2013)</span>
+        </h3>
+        <p class="text-xs text-slate-400 mt-1">
+          Calcule exatamente quanto tempo vai durar o combustível da Fan 2013 antes de abastecer.
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 mt-4">
+          <div class="lg:col-span-6 bg-slate-950/80 p-4 rounded-xl border border-slate-800 space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-2">Valores Rápidos:</label>
+              <div class="grid grid-cols-4 gap-2">
+                <button type="button" onclick="setSimuladorValor(20)" class="py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono rounded-lg transition cursor-pointer">R$ 20</button>
+                <button type="button" onclick="setSimuladorValor(30)" class="py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono rounded-lg transition cursor-pointer">R$ 30</button>
+                <button type="button" onclick="setSimuladorValor(50)" class="py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-xs font-mono rounded-lg transition cursor-pointer">R$ 50</button>
+                <button type="button" onclick="setSimuladorValor(108)" class="py-1.5 bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 text-xs font-mono rounded-lg transition cursor-pointer">Cheio</button>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs font-semibold text-slate-300 mb-1">
+                <span>Valor a Abastecer (R$):</span>
+                <span id="txt-sim-valor" class="text-emerald-400 font-mono text-sm font-bold">R$ 50,00</span>
+              </div>
+              <input type="range" id="input-sim-range" min="10" max="130" step="5" value="50" oninput="atualizarSimulador()" class="w-full accent-emerald-500 cursor-pointer">
+            </div>
+
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Preço Gasolina</label>
+                <input type="number" id="input-sim-preco" step="0.01" value="7.19" oninput="atualizarSimulador()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs font-mono text-white">
+              </div>
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Média (km/L)</label>
+                <input type="number" id="input-sim-media" step="0.1" value="33.2" oninput="atualizarSimulador()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs font-mono text-white">
+              </div>
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Km Diário</label>
+                <input type="number" id="input-sim-diario" step="1" value="33" oninput="atualizarSimulador()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs font-mono text-white">
+              </div>
+            </div>
+          </div>
+
+          <div class="lg:col-span-6 bg-slate-950/80 p-4 rounded-xl border border-emerald-500/30 flex flex-col justify-between space-y-4">
+            <div class="grid grid-cols-2 gap-3 text-center">
+              <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+                <span class="text-[10px] text-slate-400 font-mono block">AUTONOMIA</span>
+                <span id="txt-sim-autonomia" class="text-2xl font-black text-emerald-400 font-mono block mt-1">~231 km</span>
+              </div>
+              <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+                <span class="text-[10px] text-slate-400 font-mono block">DURAÇÃO</span>
+                <span id="txt-sim-dias" class="text-2xl font-black text-amber-400 font-mono block mt-1">~7 dias</span>
+              </div>
+            </div>
+
+            <div class="text-xs space-y-2 divide-y divide-slate-800/80">
+              <div class="flex justify-between pt-1">
+                <span class="text-slate-400">Litros no tanque:</span>
+                <strong id="txt-sim-litros" class="text-white font-mono">6,95 L</strong>
+              </div>
+              <div class="flex justify-between pt-1">
+                <span class="text-slate-400">Custo por dia útil:</span>
+                <strong id="txt-sim-custo-dia" class="text-emerald-400 font-mono">R$ 7,15 / dia</strong>
+              </div>
+              <div class="flex justify-between pt-1">
+                <span class="text-slate-400">Custo por km rodado:</span>
+                <strong id="txt-sim-custo-km" class="text-amber-400 font-mono">R$ 0,22 / km</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO: ETANOL VS GASOLINA -->
+    <div id="aba-etanol" class="space-y-4 hidden">
+      <div class="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border border-amber-500/30 rounded-2xl p-5 shadow-lg">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <span>⚖️ Calculadora Etanol vs Gasolina (Flex Fan 2013)</span>
+        </h3>
+        <p class="text-xs text-slate-400 mt-1">
+          Descubra qual combustível é mais vantajoso com a paridade dos preços de hoje.
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 mt-4">
+          <div class="lg:col-span-6 bg-slate-950/80 p-4 rounded-xl border border-slate-800 space-y-3">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-emerald-400 mb-1">⛽ Gasolina (R$/L)</label>
+                <input type="number" id="input-eta-gas" step="0.01" value="7.19" oninput="atualizarEtanol()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm font-mono text-white font-bold">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-teal-400 mb-1">🌱 Etanol (R$/L)</label>
+                <input type="number" id="input-eta-etanol" step="0.01" value="4.49" oninput="atualizarEtanol()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm font-mono text-white font-bold">
+              </div>
+            </div>
+            <div class="text-xs text-slate-400 pt-2">
+              Relação de preço: <strong id="txt-eta-relacao" class="text-white font-mono">62.4%</strong> (Limite de vantagem: 70%)
+            </div>
+          </div>
+
+          <div class="lg:col-span-6 bg-slate-950/80 p-4 rounded-xl border border-slate-800 flex flex-col justify-center text-center space-y-2" id="box-eta-resultado">
+            <div class="text-2xl" id="ico-eta-resultado">🌱</div>
+            <div class="text-xl font-black text-white" id="txt-eta-resultado">ABASTEÇA COM ETANOL</div>
+            <p class="text-xs text-slate-300" id="desc-eta-resultado">
+              O etanol está abaixo dos 70% da gasolina e compensa mais por km rodado!
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
+
+  <!-- MODAL: EDITAR ABASTECIMENTO -->
+  <div id="modal-editar" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm hidden overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-5 sm:p-6 text-slate-100 shadow-2xl space-y-4 my-6">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold">
+            ✏️
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Editar Abastecimento</h3>
+            <p class="text-[11px] text-slate-400">Altere os dados e clique em Salvar Alterações</p>
+          </div>
+        </div>
+        <button onclick="fecharModalEditar()" class="text-slate-400 hover:text-white text-xl cursor-pointer">&times;</button>
+      </div>
+
+      <form onsubmit="salvarEdicao(event)" class="space-y-3">
+        <input type="hidden" id="edit-index" value="">
+
+        <div class="flex items-center gap-2 p-2.5 bg-slate-950/60 border border-slate-800 rounded-xl text-xs">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="edit-cheio" class="w-4 h-4 rounded text-emerald-500 bg-slate-900 border-slate-700">
+            <span class="font-semibold text-slate-200">⛽ Tanque Cheio (15,1 L)</span>
+          </label>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Data</label>
+            <input type="date" id="edit-data" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">KM Inicial (ao abastecer)</label>
+            <input type="number" id="edit-km-inicial" required oninput="recalcularEdicao()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-teal-400 mb-1">KM Atual (painel agora)</label>
+            <input type="number" id="edit-km-atual" required oninput="recalcularEdicao()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-emerald-400 font-bold">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Litros Abastecidos</label>
+            <input type="number" step="0.01" id="edit-litros" required oninput="recalcularEdicaoLitros()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-amber-400 mb-1">Preço por Litro (R$)</label>
+            <input type="number" step="0.01" id="edit-preco" required oninput="recalcularEdicaoPreco()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-emerald-400 mb-1">Valor Total (R$)</label>
+            <input type="number" step="0.01" id="edit-total" required oninput="recalcularEdicaoTotal()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-emerald-300 font-bold">
+          </div>
+        </div>
+
+        <div class="bg-slate-950/80 p-2.5 rounded-lg border border-slate-800 text-xs flex justify-between font-mono">
+          <span>Distância: <strong id="edit-calc-dist" class="text-emerald-400">+0 km</strong></span>
+          <span>Média: <strong id="edit-calc-media" class="text-teal-300">33.2 km/L</strong></span>
+          <span>Custo: <strong id="edit-calc-custo" class="text-amber-400">R$ 0,22/km</strong></span>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Observações</label>
+          <input type="text" id="edit-obs" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white">
+        </div>
+
+        <div class="pt-2 flex items-center justify-between border-t border-slate-800">
+          <button type="button" onclick="excluirEdicao()" class="px-3 py-1.5 bg-rose-950/40 text-rose-400 hover:text-rose-300 border border-rose-900/50 rounded-lg text-xs font-semibold cursor-pointer">
+            🗑️ Excluir
+          </button>
+          <div class="flex gap-2">
+            <button type="button" onclick="fecharModalEditar()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium cursor-pointer">
+              Cancelar
+            </button>
+            <button type="submit" class="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-lg text-xs cursor-pointer shadow">
+              Salvar Alterações
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: NOVO ABASTECIMENTO -->
+  <div id="modal-novo" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm hidden overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-5 sm:p-6 text-slate-100 shadow-2xl space-y-4 my-6">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold">
+            ⛽
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Novo Abastecimento</h3>
+            <p class="text-[11px] text-slate-400">Registre uma nova entrada de combustível</p>
+          </div>
+        </div>
+        <button onclick="fecharModalNovo()" class="text-slate-400 hover:text-white text-xl cursor-pointer">&times;</button>
+      </div>
+
+      <form onsubmit="salvarNovo(event)" class="space-y-3">
+        <div class="flex items-center gap-2 p-2.5 bg-slate-950/60 border border-slate-800 rounded-xl text-xs">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="novo-cheio" checked class="w-4 h-4 rounded text-emerald-500 bg-slate-900 border-slate-700">
+            <span class="font-semibold text-slate-200">⛽ Tanque Cheio (~15,1L)</span>
+          </label>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Data</label>
+            <input type="date" id="novo-data" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Odômetro / KM</label>
+            <input type="number" id="novo-km" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Litros</label>
+            <input type="number" step="0.01" id="novo-litros" value="5.98" required oninput="recalcularNovoLitros()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-amber-400 mb-1">Preço/Litro (R$)</label>
+            <input type="number" step="0.01" id="novo-preco" value="7.19" required oninput="recalcularNovoPreco()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-emerald-400 mb-1">Valor Total (R$)</label>
+          <input type="number" step="0.01" id="novo-total" value="42.99" required oninput="recalcularNovoTotal()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-sm font-mono text-emerald-300 font-bold">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Observações</label>
+          <input type="text" id="novo-obs" placeholder="Ex: Gasolina aditivada na Fan 2013" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white">
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2 border-t border-slate-800">
+          <button type="button" onclick="fecharModalNovo()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium cursor-pointer">
+            Cancelar
+          </button>
+          <button type="submit" class="px-4 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-lg text-xs cursor-pointer shadow">
+            Adicionar Abastecimento
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: CALIBRAR KM DO PAINEL -->
+  <div id="modal-calibrar" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm hidden overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-5 sm:p-6 text-slate-100 shadow-2xl space-y-4 my-6">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/20 flex items-center justify-center text-teal-400 font-bold">
+            ⚡
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Atualizar KM do Painel</h3>
+            <p class="text-[11px] text-slate-400">Recalcula imediatamente o nível do tanque e autonomia</p>
+          </div>
+        </div>
+        <button onclick="fecharModalCalibrarKm()" class="text-slate-400 hover:text-white text-xl cursor-pointer">&times;</button>
+      </div>
+
+      <form onsubmit="salvarCalibrarKm(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Odômetro Atual (km):</label>
+          <input type="number" id="calibrar-km-input" required class="w-full bg-slate-950 border border-teal-500/50 rounded-xl px-4 py-2.5 text-xl font-bold font-mono text-teal-300">
+        </div>
+
+        <div>
+          <span class="text-[11px] text-slate-400 font-medium block mb-1">Adicionar trajeto rápido:</span>
+          <div class="grid grid-cols-4 gap-1.5">
+            <button type="button" onclick="adicionarKmCalibrar(5)" class="py-1 px-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 rounded font-mono cursor-pointer">+5 km</button>
+            <button type="button" onclick="adicionarKmCalibrar(10)" class="py-1 px-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 rounded font-mono cursor-pointer">+10 km</button>
+            <button type="button" onclick="adicionarKmCalibrar(33)" class="py-1 px-2 bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30 text-xs text-teal-300 rounded font-mono font-bold cursor-pointer">+33 km</button>
+            <button type="button" onclick="adicionarKmCalibrar(66)" class="py-1 px-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 rounded font-mono cursor-pointer">+66 km</button>
+          </div>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2 border-t border-slate-800">
+          <button type="button" onclick="fecharModalCalibrarKm()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium cursor-pointer">
+            Cancelar
+          </button>
+          <button type="submit" class="px-4 py-1.5 bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold rounded-lg text-xs cursor-pointer shadow">
+            Confirmar Novo KM
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- MODAL DE SINCRONIZAÇÃO PC <-> CELULAR -->
   <div id="modal-sync" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm hidden overflow-y-auto">
@@ -435,6 +740,7 @@
         mediaKml: null,
         custoKm: 0.22,
         isTanqueCheio: true,
+        isAtual: true,
         obs: "Gasolina nova com tanque cheio na Fan 2013"
       },
       {
@@ -450,6 +756,7 @@
         mediaKml: 33.2,
         custoKm: 0.22,
         isTanqueCheio: true,
+        isAtual: false,
         obs: "66 km serra + 165 km trabalho (5 dias x 33 km)"
       }
     ];
@@ -554,7 +861,7 @@
       ordenados.forEach((reg) => {
         const originalIndex = registros.indexOf(reg);
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-850/40 transition-colors cursor-pointer group';
+        tr.className = 'hover:bg-slate-800/40 transition-colors cursor-pointer group';
 
         const kmIni = reg.kmInicial || reg.odometro || 83663;
         const kmCur = reg.kmAtual || (kmIni + (reg.kmRodados || 0));
@@ -793,7 +1100,405 @@
       }
     }
 
-    // FUNÇÕES DE SINCRONIZAÇÃO PC <-> CELULAR
+    // --- FUNÇÕES DE EDIÇÃO E MODAIS ---
+
+    function editarRegistro(index) {
+      editandoIndex = index;
+      const reg = registros[index];
+      if (!reg) return;
+
+      const kmIni = reg.kmInicial || reg.odometro || 83663;
+      const kmCur = reg.kmAtual || (kmIni + (reg.kmRodados || 0));
+
+      document.getElementById('edit-index').value = index;
+      document.getElementById('edit-data').value = reg.data || '';
+      document.getElementById('edit-km-inicial').value = kmIni;
+      document.getElementById('edit-km-atual').value = kmCur;
+      document.getElementById('edit-litros').value = reg.litros || 0;
+      document.getElementById('edit-preco').value = reg.preco || 0;
+      document.getElementById('edit-total').value = reg.total || 0;
+      document.getElementById('edit-obs').value = reg.obs || '';
+      document.getElementById('edit-cheio').checked = reg.isTanqueCheio !== false;
+
+      recalcularEdicao();
+
+      const modal = document.getElementById('modal-editar');
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+    }
+    window.editarRegistro = editarRegistro;
+
+    function fecharModalEditar() {
+      const modal = document.getElementById('modal-editar');
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+      editandoIndex = null;
+    }
+    window.fecharModalEditar = fecharModalEditar;
+
+    function recalcularEdicao() {
+      const ini = parseFloat(document.getElementById('edit-km-inicial').value) || 0;
+      const cur = parseFloat(document.getElementById('edit-km-atual').value) || 0;
+      const litros = parseFloat(document.getElementById('edit-litros').value) || 0;
+      const preco = parseFloat(document.getElementById('edit-preco').value) || 0;
+      const dist = Math.max(0, cur - ini);
+      const media = (dist > 0 && litros > 0) ? (dist / litros).toFixed(1) : '33.2';
+      const custo = dist > 0 ? (litros * preco / dist).toFixed(2) : (preco / 33.2).toFixed(2);
+
+      const elDist = document.getElementById('edit-calc-dist');
+      const elMedia = document.getElementById('edit-calc-media');
+      const elCusto = document.getElementById('edit-calc-custo');
+      if (elDist) elDist.innerText = '+' + dist + ' km';
+      if (elMedia) elMedia.innerText = media + ' km/L';
+      if (elCusto) elCusto.innerText = 'R$ ' + custo + '/km';
+    }
+    window.recalcularEdicao = recalcularEdicao;
+
+    function recalcularEdicaoLitros() {
+      const litros = parseFloat(document.getElementById('edit-litros').value) || 0;
+      const preco = parseFloat(document.getElementById('edit-preco').value) || 0;
+      if (preco > 0) {
+        document.getElementById('edit-total').value = (litros * preco).toFixed(2);
+      }
+      recalcularEdicao();
+    }
+    window.recalcularEdicaoLitros = recalcularEdicaoLitros;
+
+    function recalcularEdicaoPreco() {
+      const litros = parseFloat(document.getElementById('edit-litros').value) || 0;
+      const preco = parseFloat(document.getElementById('edit-preco').value) || 0;
+      if (litros > 0) {
+        document.getElementById('edit-total').value = (litros * preco).toFixed(2);
+      }
+      recalcularEdicao();
+    }
+    window.recalcularEdicaoPreco = recalcularEdicaoPreco;
+
+    function recalcularEdicaoTotal() {
+      const total = parseFloat(document.getElementById('edit-total').value) || 0;
+      const preco = parseFloat(document.getElementById('edit-preco').value) || 0;
+      if (preco > 0 && total > 0) {
+        document.getElementById('edit-litros').value = (total / preco).toFixed(2);
+      }
+      recalcularEdicao();
+    }
+    window.recalcularEdicaoTotal = recalcularEdicaoTotal;
+
+    function salvarEdicao(e) {
+      if (e) e.preventDefault();
+      const idx = parseInt(document.getElementById('edit-index').value);
+      if (isNaN(idx) || !registros[idx]) return;
+
+      const ini = parseFloat(document.getElementById('edit-km-inicial').value) || 0;
+      const cur = parseFloat(document.getElementById('edit-km-atual').value) || 0;
+      const dist = Math.max(0, cur - ini);
+      const litros = parseFloat(document.getElementById('edit-litros').value) || 0;
+      const preco = parseFloat(document.getElementById('edit-preco').value) || 0;
+      const total = parseFloat(document.getElementById('edit-total').value) || (litros * preco);
+      const isCheio = document.getElementById('edit-cheio').checked;
+
+      registros[idx] = {
+        ...registros[idx],
+        data: document.getElementById('edit-data').value,
+        kmInicial: ini,
+        kmAtual: cur,
+        odometro: ini,
+        kmRodados: dist,
+        litros: litros,
+        preco: preco,
+        total: total,
+        mediaKml: (dist > 0 && litros > 0 && isCheio) ? parseFloat((dist / litros).toFixed(1)) : registros[idx].mediaKml,
+        custoKm: dist > 0 ? parseFloat((total / dist).toFixed(2)) : parseFloat((preco / 33.2).toFixed(2)),
+        isTanqueCheio: isCheio,
+        obs: document.getElementById('edit-obs').value
+      };
+
+      salvarStorage('editar-abastecimento');
+      renderizar();
+      fecharModalEditar();
+      mostrarToast('✅ Abastecimento atualizado com sucesso!');
+    }
+    window.salvarEdicao = salvarEdicao;
+
+    function excluirEdicao() {
+      const idx = parseInt(document.getElementById('edit-index').value);
+      if (isNaN(idx) || !registros[idx]) return;
+      if (confirm('Deseja realmente excluir este abastecimento?')) {
+        registros.splice(idx, 1);
+        salvarStorage('excluir-abastecimento');
+        renderizar();
+        fecharModalEditar();
+        mostrarToast('🗑️ Registro excluído.');
+      }
+    }
+    window.excluirEdicao = excluirEdicao;
+
+    // --- NOVO ABASTECIMENTO ---
+    function abrirModalNovo() {
+      const atual = registros.find(r => r.isAtual) || registros[0];
+      const ultimoKm = atual ? (atual.kmAtual || atual.kmInicial || 83712) : 83712;
+      const hoje = new Date().toISOString().split('T')[0];
+
+      document.getElementById('novo-data').value = hoje;
+      document.getElementById('novo-km').value = ultimoKm;
+      document.getElementById('novo-litros').value = '5.98';
+      document.getElementById('novo-preco').value = '7.19';
+      document.getElementById('novo-total').value = '42.99';
+      document.getElementById('novo-cheio').checked = true;
+      document.getElementById('novo-obs').value = '';
+
+      const modal = document.getElementById('modal-novo');
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+    }
+    window.abrirModalNovo = abrirModalNovo;
+
+    function fecharModalNovo() {
+      const modal = document.getElementById('modal-novo');
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+    window.fecharModalNovo = fecharModalNovo;
+
+    function recalcularNovoLitros() {
+      const litros = parseFloat(document.getElementById('novo-litros').value) || 0;
+      const preco = parseFloat(document.getElementById('novo-preco').value) || 0;
+      if (preco > 0) {
+        document.getElementById('novo-total').value = (litros * preco).toFixed(2);
+      }
+    }
+    window.recalcularNovoLitros = recalcularNovoLitros;
+
+    function recalcularNovoPreco() {
+      const litros = parseFloat(document.getElementById('novo-litros').value) || 0;
+      const preco = parseFloat(document.getElementById('novo-preco').value) || 0;
+      if (litros > 0) {
+        document.getElementById('novo-total').value = (litros * preco).toFixed(2);
+      }
+    }
+    window.recalcularNovoPreco = recalcularNovoPreco;
+
+    function recalcularNovoTotal() {
+      const total = parseFloat(document.getElementById('novo-total').value) || 0;
+      const preco = parseFloat(document.getElementById('novo-preco').value) || 0;
+      if (preco > 0 && total > 0) {
+        document.getElementById('novo-litros').value = (total / preco).toFixed(2);
+      }
+    }
+    window.recalcularNovoTotal = recalcularNovoTotal;
+
+    function salvarNovo(e) {
+      if (e) e.preventDefault();
+      const km = parseFloat(document.getElementById('novo-km').value) || 83712;
+      const litros = parseFloat(document.getElementById('novo-litros').value) || 0;
+      const preco = parseFloat(document.getElementById('novo-preco').value) || 0;
+      const total = parseFloat(document.getElementById('novo-total').value) || (litros * preco);
+      const isCheio = document.getElementById('novo-cheio').checked;
+      const obs = document.getElementById('novo-obs').value;
+
+      registros.forEach(r => r.isAtual = false);
+
+      const novo = {
+        id: Date.now().toString(),
+        data: document.getElementById('novo-data').value,
+        kmInicial: km,
+        kmAtual: km,
+        odometro: km,
+        kmRodados: 0,
+        litros: litros,
+        preco: preco,
+        total: total,
+        mediaKml: null,
+        custoKm: parseFloat((preco / 33.2).toFixed(2)),
+        isTanqueCheio: isCheio,
+        isAtual: true,
+        obs: obs || (isCheio ? 'Tanque cheio' : 'Abastecimento parcial')
+      };
+
+      registros.unshift(novo);
+      salvarStorage('novo-abastecimento');
+      renderizar();
+      fecharModalNovo();
+      mostrarToast('⛽ Novo abastecimento adicionado com sucesso!');
+    }
+    window.salvarNovo = salvarNovo;
+
+    // --- CALIBRAR KM ---
+    function abrirModalCalibrarKm() {
+      const atual = registros.find(r => r.isAtual) || registros[0];
+      const kmAtual = atual ? (atual.kmAtual || atual.kmInicial || 83712) : 83712;
+      document.getElementById('calibrar-km-input').value = kmAtual;
+
+      const modal = document.getElementById('modal-calibrar');
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+    }
+    window.abrirModalCalibrarKm = abrirModalCalibrarKm;
+
+    function fecharModalCalibrarKm() {
+      const modal = document.getElementById('modal-calibrar');
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+    window.fecharModalCalibrarKm = fecharModalCalibrarKm;
+
+    function adicionarKmCalibrar(delta) {
+      const input = document.getElementById('calibrar-km-input');
+      const val = parseFloat(input.value) || 0;
+      input.value = val + delta;
+    }
+    window.adicionarKmCalibrar = adicionarKmCalibrar;
+
+    function salvarCalibrarKm(e) {
+      if (e) e.preventDefault();
+      const novoKm = parseFloat(document.getElementById('calibrar-km-input').value);
+      if (isNaN(novoKm) || novoKm <= 0) return;
+
+      const atualIndex = registros.findIndex(r => r.isAtual);
+      const targetIndex = atualIndex >= 0 ? atualIndex : 0;
+      if (registros[targetIndex]) {
+        const ini = registros[targetIndex].kmInicial || registros[targetIndex].odometro || 83663;
+        registros[targetIndex].kmAtual = novoKm;
+        registros[targetIndex].kmRodados = Math.max(0, novoKm - ini);
+        salvarStorage('calibrar-km');
+        renderizar();
+      }
+      fecharModalCalibrarKm();
+      mostrarToast('⚡ Odômetro atualizado com sucesso!');
+    }
+    window.salvarCalibrarKm = salvarCalibrarKm;
+
+    // --- NAVEGAÇÃO ENTRE ABAS ---
+    function trocarAba(abaId) {
+      const abas = ['dashboard', 'tabela', 'simulador', 'etanol'];
+      abas.forEach(a => {
+        const btn = document.getElementById('nav-btn-' + a);
+        if (btn) {
+          if (a === abaId) {
+            btn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition-all cursor-pointer';
+          } else {
+            btn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-white transition-all cursor-pointer';
+          }
+        }
+      });
+
+      const secTabela = document.getElementById('aba-tabela');
+      const secSim = document.getElementById('aba-simulador');
+      const secEta = document.getElementById('aba-etanol');
+
+      if (abaId === 'dashboard' || abaId === 'tabela') {
+        if (secTabela) secTabela.classList.remove('hidden');
+        if (secSim) secSim.classList.add('hidden');
+        if (secEta) secEta.classList.add('hidden');
+      } else if (abaId === 'simulador') {
+        if (secTabela) secTabela.classList.add('hidden');
+        if (secSim) secSim.classList.remove('hidden');
+        if (secEta) secEta.classList.add('hidden');
+        atualizarSimulador();
+      } else if (abaId === 'etanol') {
+        if (secTabela) secTabela.classList.add('hidden');
+        if (secSim) secSim.classList.add('hidden');
+        if (secEta) secEta.classList.remove('hidden');
+        atualizarEtanol();
+      }
+    }
+    window.trocarAba = trocarAba;
+
+    // --- SIMULADOR ---
+    function setSimuladorValor(val) {
+      document.getElementById('input-sim-range').value = val;
+      atualizarSimulador();
+    }
+    window.setSimuladorValor = setSimuladorValor;
+
+    function atualizarSimulador() {
+      const valor = parseFloat(document.getElementById('input-sim-range').value) || 50;
+      const preco = parseFloat(document.getElementById('input-sim-preco').value) || 7.19;
+      const media = parseFloat(document.getElementById('input-sim-media').value) || 33.2;
+      const diario = parseFloat(document.getElementById('input-sim-diario').value) || 33;
+
+      document.getElementById('txt-sim-valor').innerText = formatarMoeda(valor);
+
+      const litros = preco > 0 ? valor / preco : 0;
+      const autonomia = litros * media;
+      const dias = diario > 0 ? autonomia / diario : 0;
+      const custoKm = media > 0 ? preco / media : 0;
+      const custoDia = diario * custoKm;
+
+      document.getElementById('txt-sim-autonomia').innerText = '~' + Math.round(autonomia) + ' km';
+      document.getElementById('txt-sim-dias').innerText = '~' + Math.round(dias) + ' dias';
+      document.getElementById('txt-sim-litros').innerText = formatarNumero(litros, 2) + ' L';
+      document.getElementById('txt-sim-custo-dia').innerText = formatarMoeda(custoDia) + ' / dia';
+      document.getElementById('txt-sim-custo-km').innerText = formatarMoeda(custoKm) + ' / km';
+    }
+    window.atualizarSimulador = atualizarSimulador;
+
+    // --- ETANOL VS GASOLINA ---
+    function atualizarEtanol() {
+      const gas = parseFloat(document.getElementById('input-eta-gas').value) || 7.19;
+      const eta = parseFloat(document.getElementById('input-eta-etanol').value) || 4.49;
+      const relacao = gas > 0 ? (eta / gas) * 100 : 0;
+
+      document.getElementById('txt-eta-relacao').innerText = relacao.toFixed(1) + '%';
+
+      const box = document.getElementById('box-eta-resultado');
+      const ico = document.getElementById('ico-eta-resultado');
+      const txt = document.getElementById('txt-eta-resultado');
+      const desc = document.getElementById('desc-eta-resultado');
+
+      if (relacao <= 70) {
+        box.className = 'lg:col-span-6 bg-teal-950/40 border border-teal-500/50 p-4 rounded-xl flex flex-col justify-center text-center space-y-2';
+        ico.innerText = '🌱';
+        txt.innerText = 'ABASTEÇA COM ETANOL';
+        desc.innerText = `O etanol custa ${relacao.toFixed(1)}% da gasolina (abaixo dos 70%) e gera economia por km!`;
+      } else {
+        box.className = 'lg:col-span-6 bg-emerald-950/40 border border-emerald-500/50 p-4 rounded-xl flex flex-col justify-center text-center space-y-2';
+        ico.innerText = '⛽';
+        txt.innerText = 'ABASTEÇA COM GASOLINA';
+        desc.innerText = `A gasolina compensa mais! O etanol custa ${relacao.toFixed(1)}% da gasolina (acima dos 70%).`;
+      }
+    }
+    window.atualizarEtanol = atualizarEtanol;
+
+    // --- EXPORTAR CSV ---
+    function exportarCSV() {
+      if (!registros || registros.length === 0) {
+        alert('Nenhum registro para exportar.');
+        return;
+      }
+      const cabecalho = 'ID;Data;KM Inicial;KM Atual;KM Rodados;Litros;Preco Litro (R$);Total (R$);Consumo (km/L);Custo por KM (R$);Tanque Cheio;Observacoes\n';
+      const linhas = registros.map(r => {
+        const kmIni = r.kmInicial || r.odometro || 0;
+        const kmCur = r.kmAtual || (kmIni + (r.kmRodados || 0));
+        const rodados = Math.max(0, kmCur - kmIni);
+        return [
+          r.id,
+          r.data,
+          kmIni,
+          kmCur,
+          rodados,
+          (r.litros || 0).toString().replace('.', ','),
+          (r.preco || 0).toString().replace('.', ','),
+          (r.total || 0).toString().replace('.', ','),
+          r.mediaKml ? r.mediaKml.toString().replace('.', ',') : '',
+          (r.custoKm || 0).toString().replace('.', ','),
+          r.isTanqueCheio !== false ? 'SIM' : 'NAO',
+          `"${(r.obs || '').replace(/"/g, '""')}"`
+        ].join(';');
+      }).join('\n');
+
+      const blob = new Blob(['\uFEFF' + cabecalho + linhas], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', `autokm_fan2013_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      mostrarToast('📥 Planilha CSV exportada com sucesso!');
+    }
+    window.exportarCSV = exportarCSV;
+
+    // --- SINCRONIZAÇÃO PC <-> CELULAR ---
     async function forcarSincronizacao(abrirModalApos = false) {
       const btn = document.getElementById('btn-sincronizar-topo');
       const btnModal = document.getElementById('btn-sync-modal-acao');
@@ -908,35 +1613,6 @@
       document.body.removeChild(a);
     }
 
-    function copiarCodigoBackup() {
-      const jsonStr = JSON.stringify(registros);
-      navigator.clipboard.writeText(jsonStr).then(() => {
-        alert('Código de backup copiado com sucesso! Você pode colar no WhatsApp ou enviar para si mesmo.');
-      }).catch(() => {
-        prompt('Copie o código de backup abaixo:', jsonStr);
-      });
-    }
-
-    function colarCodigoBackup() {
-      const code = prompt('Cole aqui o código de backup gerado no outro dispositivo:');
-      if (code && code.trim()) {
-        try {
-          const parsed = JSON.parse(code.trim());
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            registros = parsed;
-            salvarStorage();
-            renderizar();
-            alert('Dados sincronizados com sucesso!');
-            fecharModalSync();
-          } else {
-            alert('O código colado não contém abastecimentos válidos.');
-          }
-        } catch (e) {
-          alert('Código inválido. Certifique-se de copiar todo o conteúdo.');
-        }
-      }
-    }
-
     function atualizarStatusNuvem(status) {
       const dot = document.getElementById('dot-cloud-status');
       const txt = document.getElementById('txt-cloud-status');
@@ -998,7 +1674,6 @@
       window.atualizarStatusNuvem && window.atualizarStatusNuvem('offline');
     }
 
-    // Salva na nuvem ao alterar qualquer valor
     window.salvarNuvem = async function(origem = 'usuario') {
       if (!db || !window.registros) return;
       try {
@@ -1018,7 +1693,6 @@
       }
     };
 
-    // Busca dados mais recentes diretamente da nuvem
     window.buscarNuvem = async function() {
       if (!db) return false;
       try {
@@ -1047,7 +1721,6 @@
       return false;
     };
 
-    // Ouvinte em tempo real: sincroniza instantaneamente qualquer ajuste feito no PC ou celular
     if (db) {
       const docRef = doc(db, 'vehicles', 'fan2013');
       onSnapshot(docRef, (docSnap) => {

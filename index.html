@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-    .font-mono { font-family: 'JetBrains Mono', monospace; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
     input[type=number]::-webkit-inner-spin-button, 
     input[type=number]::-webkit-outer-spin-button { 
       -webkit-appearance: none; 
@@ -44,6 +44,10 @@
           <span>📋 Abastecimentos</span>
           <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-800 text-slate-300 font-mono font-bold" id="badge-total-regs">2</span>
         </button>
+        <button onclick="trocarAba('oleo')" id="nav-btn-oleo" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-white transition-all cursor-pointer">
+          <span>🛢️ Troca de Óleo</span>
+          <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-800 text-amber-300 font-mono font-bold" id="badge-total-oleo">1</span>
+        </button>
         <button onclick="trocarAba('simulador')" id="nav-btn-simulador" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium text-slate-400 hover:text-white transition-all cursor-pointer">
           <span>🧮 Simulador Km & Dias</span>
         </button>
@@ -75,7 +79,7 @@
   <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 flex-1">
 
     <!-- SPOTLIGHT BANNER COM PAINEL GAUGE E PREVISÃO -->
-    <div class="bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 border border-emerald-500/30 rounded-2xl p-5 shadow-lg relative overflow-hidden">
+    <div id="banner-painel" class="bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 border border-emerald-500/30 rounded-2xl p-5 shadow-lg relative overflow-hidden">
       <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
         <div class="space-y-3 flex-1">
           <div class="flex flex-wrap items-center gap-2">
@@ -293,41 +297,99 @@
       </div>
     </div>
 
-    <!-- SEÇÃO: CARD DE TROCA DE ÓLEO -->
-    <div class="bg-gradient-to-r from-amber-950/30 via-slate-900 to-slate-900 border border-amber-500/30 rounded-2xl p-5 shadow-lg">
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div class="space-y-2 flex-1">
-          <div class="flex items-center gap-2">
-            <span class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
-              🛢️
-            </span>
-            <h3 class="text-base font-bold text-white tracking-tight">
-              Acompanhamento de Troca de Óleo - Fan 2013
-            </h3>
-            <span class="text-xs font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-              Mobil Super Moto 10W-30
-            </span>
+    <!-- SEÇÃO: TROCA DE ÓLEO (CICLO ATIVO + HISTÓRICO IGUAL AO DE GASOLINA) -->
+    <div id="aba-oleo" class="space-y-4">
+      <!-- CARD DE ACOMPANHAMENTO DO ÓLEO ATIVO -->
+      <div class="bg-gradient-to-r from-amber-950/30 via-slate-900 to-slate-900 border border-amber-500/30 rounded-2xl p-5 shadow-lg">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="space-y-2 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">
+                🛢️
+              </span>
+              <h3 class="text-base font-bold text-white tracking-tight">
+                Acompanhamento de Troca de Óleo - Fan 2013
+              </h3>
+              <span id="txt-oleo-marca" class="text-xs font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                Mobil Super Moto 10W-30
+              </span>
+              <span id="txt-oleo-tag-novo" class="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                ÓLEO NOVO (CICLO ATIVO)
+              </span>
+            </div>
+
+            <p class="text-xs text-slate-300">
+              Ao trocar o óleo, clique em <strong class="text-amber-300">+ Trocar Óleo (Óleo Novo)</strong> para encerrar o ciclo anterior no histórico e reiniciar a contagem do zero. Próxima meta: <strong class="text-amber-400 font-mono" id="txt-meta-oleo">84.400 km</strong>.
+            </p>
+
+            <div class="space-y-1.5 pt-1">
+              <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                <span class="text-slate-400">Troca atual: <strong class="text-white" id="txt-ultima-troca">83.400 km</strong> <span id="txt-rodados-oleo" class="text-emerald-400 ml-1">(+312 km rodados)</span></span>
+                <span class="text-amber-300 font-bold" id="txt-status-oleo">Faltam ~688 km</span>
+                <span class="text-slate-400">Meta: <strong class="text-amber-400" id="txt-meta-oleo-fim">84.400 km</strong></span>
+              </div>
+              <div class="w-full bg-slate-950 border border-slate-800 rounded-full h-3 overflow-hidden p-0.5 shadow-inner">
+                <div id="barra-oleo" class="h-full rounded-full bg-gradient-to-r from-emerald-500 via-amber-400 to-amber-500 transition-all duration-500" style="width: 31%;"></div>
+              </div>
+            </div>
           </div>
 
-          <p class="text-xs text-slate-300">
-            Acompanhe o momento exato de efetuar a troca de óleo do motor. Próxima meta recomendada: <strong class="text-amber-400 font-mono" id="txt-meta-oleo">84.400 km</strong>.
-          </p>
+          <div class="flex flex-wrap md:flex-col items-stretch justify-end gap-2 shrink-0">
+            <button onclick="abrirModalNovoOleo()" class="flex items-center justify-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer shadow-sm">
+              <span>🛢️</span> + Trocar Óleo (Óleo Novo)
+            </button>
+            <button onclick="editarOleoAtivo()" class="flex items-center justify-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">
+              <span>⚙️</span> Alterar Meta / Óleo Atual
+            </button>
+          </div>
+        </div>
+      </div>
 
-          <div class="space-y-1.5 pt-1">
-            <div class="flex items-center justify-between text-xs font-mono">
-              <span class="text-slate-400">Última troca: <strong class="text-white" id="txt-ultima-troca">83.400 km</strong></span>
-              <span class="text-amber-300 font-bold" id="txt-status-oleo">Faltam ~688 km</span>
-              <span class="text-slate-400">Meta: <strong class="text-amber-400" id="txt-meta-oleo-fim">84.400 km</strong></span>
-            </div>
-            <div class="w-full bg-slate-950 border border-slate-800 rounded-full h-3 overflow-hidden p-0.5 shadow-inner">
-              <div id="barra-oleo" class="h-full rounded-full bg-gradient-to-r from-emerald-500 via-amber-400 to-amber-500 transition-all duration-500" style="width: 31%;"></div>
-            </div>
+      <!-- TABELA DE HISTÓRICO DE TROCAS DE ÓLEO (IGUAL À DE GASOLINA) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div class="p-4 sm:p-5 border-b border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              <span>Histórico de Trocas de Óleo</span>
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">
+              Clique em "<strong class="text-amber-300">✏️ Editar</strong>" em qualquer linha para ajustar o KM, a meta, o tipo de óleo ou o valor pago.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="exportarOleoCSV()" class="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg text-xs font-medium transition cursor-pointer">
+              <span>📥 Baixar CSV</span>
+            </button>
+            <button onclick="abrirModalNovoOleo()" class="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm cursor-pointer">
+              <span>+ Óleo Novo</span>
+            </button>
           </div>
         </div>
 
-        <div class="flex md:flex-col items-center justify-end gap-2 shrink-0">
-          <button onclick="editarMetaOleo()" class="flex items-center gap-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer">
-            <span>⚙️</span> Alterar Meta de Troca
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="bg-slate-950/70 border-b border-slate-800 text-slate-400 uppercase font-mono tracking-wider text-[11px]">
+                <th class="py-3 px-4">Data &amp; Óleo</th>
+                <th class="py-3 px-3">KM Inicial</th>
+                <th class="py-3 px-3">KM Atual / Troca</th>
+                <th class="py-3 px-3">KM Rodados</th>
+                <th class="py-3 px-3">Meta / Intervalo</th>
+                <th class="py-3 px-3 text-center">Progresso</th>
+                <th class="py-3 px-3">Valor / Custo KM</th>
+                <th class="py-3 px-4 text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="corpo-tabela-oleo" class="divide-y divide-slate-800/60 font-mono"></tbody>
+          </table>
+        </div>
+
+        <div class="p-3 bg-slate-950/40 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
+          <span class="flex items-center gap-1 text-[11px]">
+            💡 <em>Dica: Ao adicionar um Óleo Novo, a troca anterior fica salva como Ciclo Concluído e o contador zera a partir do KM da troca.</em>
+          </span>
+          <button onclick="restaurarOleoOriginal()" class="text-slate-500 hover:text-amber-400 text-[11px] underline cursor-pointer transition">
+            Restaurar histórico de óleo original
           </button>
         </div>
       </div>
@@ -596,6 +658,173 @@
     </div>
   </div>
 
+  <!-- MODAL: NOVO ÓLEO (REGISTRAR ÓLEO NOVO SEM ACUMULAR) -->
+  <div id="modal-oleo-novo" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm hidden overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-5 sm:p-6 text-slate-100 shadow-2xl space-y-4 my-6">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold">
+            🛢️
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Registrar Troca de Óleo (Óleo Novo)</h3>
+            <p class="text-[11px] text-slate-400">Encerra o óleo anterior no histórico e zera a contagem</p>
+          </div>
+        </div>
+        <button onclick="fecharModalNovoOleo()" class="text-slate-400 hover:text-white text-xl cursor-pointer">&times;</button>
+      </div>
+
+      <form onsubmit="salvarNovoOleo(event)" class="space-y-3">
+        <div class="p-2.5 bg-amber-950/30 border border-amber-500/30 rounded-xl text-xs text-amber-200 leading-relaxed">
+          Ao confirmar, a troca anterior é salva como <strong>Ciclo Concluído</strong> no histórico e o contador reinicia em <strong>0%</strong> a partir do novo KM.
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Data da Troca</label>
+            <input type="date" id="oleo-novo-data" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-amber-300 mb-1">KM da Troca (Óleo Novo)</label>
+            <input type="number" id="oleo-novo-km" required oninput="atualizarMetaNovoOleoPorKm()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-amber-300 font-bold">
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[11px] text-slate-400 block mb-1">Intervalo recomendado para próxima troca:</span>
+          <div class="grid grid-cols-4 gap-1.5">
+            <button type="button" onclick="definirIntervaloNovoOleo(1000)" class="py-1 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-xs text-amber-300 rounded font-mono font-bold cursor-pointer">+1.000 km</button>
+            <button type="button" onclick="definirIntervaloNovoOleo(1500)" class="py-1 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 rounded font-mono cursor-pointer">+1.500 km</button>
+            <button type="button" onclick="definirIntervaloNovoOleo(2000)" class="py-1 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 rounded font-mono cursor-pointer">+2.000 km</button>
+            <button type="button" onclick="definirIntervaloNovoOleo(3000)" class="py-1 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 rounded font-mono cursor-pointer">+3.000 km</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-emerald-400 mb-1">Próxima Meta (KM)</label>
+            <input type="number" id="oleo-novo-meta" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-emerald-300 font-bold">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Valor Pago (R$)</label>
+            <input type="number" step="0.01" id="oleo-novo-valor" value="45.00" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Óleo Utilizado</label>
+          <input type="text" id="oleo-novo-tipo" value="Mobil Super Moto 10W-30" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white">
+        </div>
+
+        <div class="flex items-center gap-2 p-2.5 bg-slate-950/60 border border-slate-800 rounded-xl text-xs">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="oleo-novo-filtro" checked class="w-4 h-4 rounded text-amber-500 bg-slate-900 border-slate-700">
+            <span class="font-semibold text-slate-200">Limpeza de peneira / troca de filtro</span>
+          </label>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Observações</label>
+          <input type="text" id="oleo-novo-obs" placeholder="Ex: Óleo trocado na oficina, nível conferido" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white">
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2 border-t border-slate-800">
+          <button type="button" onclick="fecharModalNovoOleo()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium cursor-pointer">
+            Cancelar
+          </button>
+          <button type="submit" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs cursor-pointer shadow">
+            Confirmar Óleo Novo
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: EDITAR TROCA DE ÓLEO -->
+  <div id="modal-oleo-editar" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm hidden overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-5 sm:p-6 text-slate-100 shadow-2xl space-y-4 my-6">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold">
+            ✏️
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Editar Troca de Óleo</h3>
+            <p class="text-[11px] text-slate-400">Altere o KM inicial, meta ou detalhes do registro</p>
+          </div>
+        </div>
+        <button onclick="fecharModalEditarOleo()" class="text-slate-400 hover:text-white text-xl cursor-pointer">&times;</button>
+      </div>
+
+      <form onsubmit="salvarEdicaoOleo(event)" class="space-y-3">
+        <input type="hidden" id="oleo-edit-index" value="">
+
+        <div class="flex flex-wrap items-center gap-4 p-2.5 bg-slate-950/60 border border-slate-800 rounded-xl text-xs">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="oleo-edit-filtro" class="w-4 h-4 rounded text-amber-500 bg-slate-900 border-slate-700">
+            <span class="font-semibold text-slate-200">Limpeza de peneira / filtro</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="oleo-edit-atual" class="w-4 h-4 rounded text-emerald-500 bg-slate-900 border-slate-700">
+            <span class="font-semibold text-amber-300">🛢️ Óleo Ativo Atual</span>
+          </label>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Data da Troca</label>
+            <input type="date" id="oleo-edit-data" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">KM Inicial (na troca)</label>
+            <input type="number" id="oleo-edit-km-inicial" required oninput="recalcularEdicaoOleo()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-teal-400 mb-1">KM Atual / Fim do Ciclo</label>
+            <input type="number" id="oleo-edit-km-atual" required oninput="recalcularEdicaoOleo()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-emerald-400 font-bold">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-amber-400 mb-1">Meta Próxima Troca (KM)</label>
+            <input type="number" id="oleo-edit-meta" required oninput="recalcularEdicaoOleo()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-amber-300 font-bold">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Óleo Utilizado</label>
+            <input type="text" id="oleo-edit-tipo" required class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-emerald-400 mb-1">Valor Pago (R$)</label>
+            <input type="number" step="0.01" id="oleo-edit-valor" required oninput="recalcularEdicaoOleo()" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-mono text-emerald-300 font-bold">
+          </div>
+        </div>
+
+        <div class="bg-slate-950/80 p-2.5 rounded-lg border border-slate-800 text-xs flex justify-between font-mono">
+          <span>Rodados: <strong id="oleo-edit-calc-dist" class="text-emerald-400">+0 km</strong></span>
+          <span>Intervalo: <strong id="oleo-edit-calc-interv" class="text-amber-300">1.000 km</strong></span>
+          <span>Custo: <strong id="oleo-edit-calc-custo" class="text-white">R$ 0,05/km</strong></span>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Observações</label>
+          <input type="text" id="oleo-edit-obs" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white">
+        </div>
+
+        <div class="pt-2 flex items-center justify-between border-t border-slate-800">
+          <button type="button" onclick="excluirEdicaoOleo()" class="px-3 py-1.5 bg-rose-950/40 text-rose-400 hover:text-rose-300 border border-rose-900/50 rounded-lg text-xs font-semibold cursor-pointer">
+            🗑️ Excluir
+          </button>
+          <div class="flex gap-2">
+            <button type="button" onclick="fecharModalEditarOleo()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-xs font-medium cursor-pointer">
+              Cancelar
+            </button>
+            <button type="submit" class="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs cursor-pointer shadow">
+              Salvar Alterações
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- MODAL: CALIBRAR KM DO PAINEL -->
   <div id="modal-calibrar" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-sm hidden overflow-y-auto">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-5 sm:p-6 text-slate-100 shadow-2xl space-y-4 my-6">
@@ -606,7 +835,7 @@
           </div>
           <div>
             <h3 class="text-base font-bold text-white">Atualizar KM do Painel</h3>
-            <p class="text-[11px] text-slate-400">Recalcula imediatamente o nível do tanque e autonomia</p>
+            <p class="text-[11px] text-slate-400">Recalcula imediatamente o nível do tanque, autonomia e óleo</p>
           </div>
         </div>
         <button onclick="fecharModalCalibrarKm()" class="text-slate-400 hover:text-white text-xl cursor-pointer">&times;</button>
@@ -662,7 +891,7 @@
           <span>☁️ Sincronização em Nuvem em Tempo Real (Ativa!)</span>
         </div>
         <p>
-          O sistema está conectado ao banco de dados em nuvem. Qualquer abastecimento, alteração de KM ou troca de óleo feita no computador ou no celular é <strong>sincronizada automaticamente</strong> nos dois aparelhos via GitHub Pages!
+          O sistema está conectado ao banco de dados em nuvem. Qualquer abastecimento, alteração de KM ou troca de óleo feita no computador ou no celular é <strong>sincronizada automaticamente</strong> nos dois aparelhos!
         </p>
         <button id="btn-sync-modal-acao" onclick="forcarSincronizacao(false)" class="w-full mt-2 py-2 px-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-lg text-xs flex items-center justify-center gap-2 transition cursor-pointer shadow-sm active:scale-95">
           <span>🔄</span> <span>Forçar Sincronização Agora</span>
@@ -700,7 +929,7 @@
             <span class="text-[10px] font-mono text-teal-400 bg-teal-950 px-2 py-0.5 rounded border border-teal-800">Backup</span>
           </div>
           <p class="text-xs text-slate-300 leading-relaxed">
-            Gera um novo arquivo <strong>autokm_atualizado.html</strong> com seus abastecimentos gravados no código para salvar offline.
+            Gera um novo arquivo <strong>autokm_atualizado.html</strong> com seus abastecimentos e trocas de óleo gravados no código para salvar offline.
           </p>
           <button onclick="baixarHtmlAtualizado()" class="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-xl transition cursor-pointer shadow-sm">
             Baixar autokm_atualizado.html
@@ -761,8 +990,27 @@
       }
     ];
 
-    let registros = null;
+    const DADOS_INICIAIS_OLEO = [
+      {
+        id: "oleo-1",
+        data: "2026-10-16",
+        kmInicial: 83400,
+        kmAtual: 83712,
+        intervaloKm: 1000,
+        metaKm: 84400,
+        tipoOleo: "Mobil Super Moto 10W-30",
+        valor: 45.00,
+        custoKm: 0.05,
+        trocouFiltro: true,
+        isAtual: true,
+        obs: "Troca preventiva + limpeza da peneira de óleo"
+      }
+    ];
 
+    let registros = null;
+    let trocasOleo = null;
+
+    // 1. Leitura via parâmetro ?sync=
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const syncPayload = urlParams.get('sync');
@@ -777,21 +1025,31 @@
         if (Array.isArray(dadosImportados) && dadosImportados.length > 0) {
           registros = dadosImportados;
           localStorage.setItem('autokm_dados_v6', JSON.stringify(registros));
-          try {
-            window.history.replaceState({}, document.title, window.location.pathname);
-          } catch (e) {}
+        } else if (dadosImportados && typeof dadosImportados === 'object') {
+          if (Array.isArray(dadosImportados.registros) && dadosImportados.registros.length > 0) {
+            registros = dadosImportados.registros;
+            localStorage.setItem('autokm_dados_v6', JSON.stringify(registros));
+          }
+          if (Array.isArray(dadosImportados.trocasOleo) && dadosImportados.trocasOleo.length > 0) {
+            trocasOleo = dadosImportados.trocasOleo;
+            localStorage.setItem('autokm_trocas_oleo_v1', JSON.stringify(trocasOleo));
+          }
         }
+        try {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (e) {}
       }
     } catch (e) {
       console.warn('Sync URL payload não encontrado:', e);
     }
 
+    // 2. Carrega Gasolina do localStorage
     if (!registros) {
       try {
         const stored = localStorage.getItem('autokm_dados_v6');
         if (stored) {
           const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length >= 2 && parsed.some(r => r.data === '2026-10-18')) {
+          if (Array.isArray(parsed) && parsed.length > 0) {
             registros = parsed;
           }
         }
@@ -805,20 +1063,74 @@
       localStorage.setItem('autokm_dados_v6', JSON.stringify(registros));
     }
 
+    // 3. Carrega Trocas de Óleo do localStorage (ou migra de campos legados)
+    if (!trocasOleo) {
+      try {
+        const storedOleo = localStorage.getItem('autokm_trocas_oleo_v1');
+        if (storedOleo) {
+          const parsedOleo = JSON.parse(storedOleo);
+          if (Array.isArray(parsedOleo) && parsedOleo.length > 0) {
+            trocasOleo = parsedOleo;
+          }
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    if (!trocasOleo) {
+      const legacyMeta = parseFloat(localStorage.getItem('autokm_meta_oleo'));
+      const legacyUltima = parseFloat(localStorage.getItem('autokm_ultima_troca_oleo'));
+      const atualGas = registros.find(r => r.isAtual) || registros[0];
+      const kmPainel = atualGas ? (atualGas.kmAtual || atualGas.kmInicial || 83712) : 83712;
+
+      if (!isNaN(legacyMeta) || !isNaN(legacyUltima)) {
+        const ini = !isNaN(legacyUltima) ? legacyUltima : 83400;
+        const meta = (!isNaN(legacyMeta) && legacyMeta > ini) ? legacyMeta : (ini + 1000);
+        trocasOleo = [{
+          id: "oleo-1",
+          data: "2026-10-16",
+          kmInicial: ini,
+          kmAtual: Math.max(ini, kmPainel),
+          intervaloKm: meta - ini,
+          metaKm: meta,
+          tipoOleo: "Mobil Super Moto 10W-30",
+          valor: 45.00,
+          custoKm: 0.05,
+          trocouFiltro: true,
+          isAtual: true,
+          obs: "Troca preventiva + limpeza da peneira de óleo"
+        }];
+      } else {
+        trocasOleo = JSON.parse(JSON.stringify(DADOS_INICIAIS_OLEO));
+      }
+      localStorage.setItem('autokm_trocas_oleo_v1', JSON.stringify(trocasOleo));
+    }
+
     window.registros = registros;
-    let editandoIndex = null;
-    let metaKmOleo = parseFloat(localStorage.getItem('autokm_meta_oleo')) || 84400;
-    let ultimaTrocaKmOleo = parseFloat(localStorage.getItem('autokm_ultima_troca_oleo')) || 83400;
-    window.metaKmOleo = metaKmOleo;
-    window.ultimaTrocaKmOleo = ultimaTrocaKmOleo;
+    window.trocasOleo = trocasOleo;
+
+    function getOleoAtivo() {
+      return trocasOleo.find(t => t.isAtual) || trocasOleo[0];
+    }
+
+    function getKmAtualPainel() {
+      const atualGas = registros.find(r => r.isAtual) || registros[0];
+      return atualGas ? (atualGas.kmAtual || atualGas.kmInicial || 83712) : 83712;
+    }
 
     function salvarStorage(origem = 'usuario') {
+      const oleoAtivo = getOleoAtivo();
       window.registros = registros;
-      window.metaKmOleo = metaKmOleo;
-      window.ultimaTrocaKmOleo = ultimaTrocaKmOleo;
+      window.trocasOleo = trocasOleo;
+      window.metaKmOleo = oleoAtivo ? oleoAtivo.metaKm : 84400;
+      window.ultimaTrocaKmOleo = oleoAtivo ? oleoAtivo.kmInicial : 83400;
+
       localStorage.setItem('autokm_dados_v6', JSON.stringify(registros));
-      localStorage.setItem('autokm_meta_oleo', metaKmOleo);
-      localStorage.setItem('autokm_ultima_troca_oleo', ultimaTrocaKmOleo);
+      localStorage.setItem('autokm_trocas_oleo_v1', JSON.stringify(trocasOleo));
+      localStorage.setItem('autokm_meta_oleo', window.metaKmOleo);
+      localStorage.setItem('autokm_ultima_troca_oleo', window.ultimaTrocaKmOleo);
+
       if (typeof window.salvarNuvem === 'function') {
         window.salvarNuvem(origem);
       }
@@ -829,9 +1141,20 @@
         registros = JSON.parse(JSON.stringify(DADOS_INICIAIS));
         salvarStorage('restaurar');
         renderizar();
-        alert('Abastecimentos originais restaurados com sucesso!');
+        mostrarToast('✅ Abastecimentos originais restaurados!');
       }
     }
+    window.restaurarDadosOriginais = restaurarDadosOriginais;
+
+    function restaurarOleoOriginal() {
+      if (confirm('Deseja restaurar o histórico inicial de troca de óleo?')) {
+        trocasOleo = JSON.parse(JSON.stringify(DADOS_INICIAIS_OLEO));
+        salvarStorage('restaurar-oleo');
+        renderizar();
+        mostrarToast('✅ Histórico inicial de óleo restaurado!');
+      }
+    }
+    window.restaurarOleoOriginal = restaurarOleoOriginal;
 
     function formatarMoeda(val) {
       return (val || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -849,12 +1172,17 @@
 
     function renderizar() {
       window.registros = registros;
+      window.trocasOleo = trocasOleo;
       window.renderizar = renderizar;
+
       const corpo = document.getElementById('corpo-tabela');
       corpo.innerHTML = '';
 
       const badgeTotal = document.getElementById('badge-total-regs');
       if (badgeTotal) badgeTotal.innerText = registros.length;
+
+      const badgeTotalOleo = document.getElementById('badge-total-oleo');
+      if (badgeTotalOleo) badgeTotalOleo.innerText = trocasOleo.length;
 
       const ordenados = [...registros].sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
 
@@ -1048,31 +1376,40 @@
       }
     }
 
+    // --- RENDERIZAÇÃO DO ÓLEO (CARD ATIVO + TABELA HISTÓRICO) ---
     function renderizarOleo() {
-      const atual = registros.find(r => r.isAtual) || registros[0];
-      const kmAtualPainel = atual ? (atual.kmAtual || atual.kmInicial || 83712) : 83712;
-      const totalIntervalo = metaKmOleo - ultimaTrocaKmOleo;
-      const rodadosDesdeTroca = kmAtualPainel - ultimaTrocaKmOleo;
-      const faltamKm = Math.max(0, metaKmOleo - kmAtualPainel);
+      const oleoAtivo = getOleoAtivo();
+      const kmAtualPainel = getKmAtualPainel();
+
+      const kmIniAtivo = oleoAtivo ? oleoAtivo.kmInicial : 83400;
+      const metaAtiva = oleoAtivo ? oleoAtivo.metaKm : 84400;
+      const kmCurAtivo = oleoAtivo ? Math.max(oleoAtivo.kmAtual || kmIniAtivo, kmAtualPainel) : kmAtualPainel;
+      const totalIntervalo = Math.max(1, metaAtiva - kmIniAtivo);
+      const rodadosDesdeTroca = Math.max(0, kmCurAtivo - kmIniAtivo);
+      const faltamKm = Math.max(0, metaAtiva - kmCurAtivo);
       const pctOleo = Math.min(100, Math.max(0, Math.round((rodadosDesdeTroca / totalIntervalo) * 100)));
 
+      const txtMarca = document.getElementById('txt-oleo-marca');
       const txtMeta = document.getElementById('txt-meta-oleo');
       const txtMetaFim = document.getElementById('txt-meta-oleo-fim');
       const txtUltima = document.getElementById('txt-ultima-troca');
+      const txtRodados = document.getElementById('txt-rodados-oleo');
       const txtStatus = document.getElementById('txt-status-oleo');
       const barraOleo = document.getElementById('barra-oleo');
 
-      if (txtMeta) txtMeta.innerText = formatarNumero(metaKmOleo, 0) + ' km';
-      if (txtMetaFim) txtMetaFim.innerText = formatarNumero(metaKmOleo, 0) + ' km';
-      if (txtUltima) txtUltima.innerText = formatarNumero(ultimaTrocaKmOleo, 0) + ' km';
+      if (txtMarca) txtMarca.innerText = oleoAtivo ? oleoAtivo.tipoOleo : 'Mobil Super Moto 10W-30';
+      if (txtMeta) txtMeta.innerText = formatarNumero(metaAtiva, 0) + ' km';
+      if (txtMetaFim) txtMetaFim.innerText = formatarNumero(metaAtiva, 0) + ' km';
+      if (txtUltima) txtUltima.innerText = formatarNumero(kmIniAtivo, 0) + ' km';
+      if (txtRodados) txtRodados.innerText = `(+${formatarNumero(rodadosDesdeTroca, 0)} km rodados)`;
 
       if (txtStatus) {
         if (faltamKm <= 0) {
-          txtStatus.innerHTML = '<span class="text-red-400 font-bold animate-pulse">⚠️ ATENÇÃO: HORA DA TROCA DE ÓLEO!</span>';
+          txtStatus.innerHTML = `<span class="text-red-400 font-bold animate-pulse">⚠️ ATENÇÃO: HORA DA TROCA DE ÓLEO! (+${formatarNumero(kmCurAtivo - metaAtiva, 0)} km)</span>`;
         } else if (faltamKm <= 200) {
-          txtStatus.innerHTML = `<span class="text-amber-400 font-bold">⚠️ Faltam apenas ${faltamKm} km para a troca!</span>`;
+          txtStatus.innerHTML = `<span class="text-amber-400 font-bold">⚠️ Faltam apenas ${formatarNumero(faltamKm, 0)} km para a troca!</span>`;
         } else {
-          txtStatus.innerHTML = `Faltam <strong class="text-amber-300">${faltamKm} km</strong> (~${Math.round(faltamKm / 33)} dias)`;
+          txtStatus.innerHTML = `Faltam <strong class="text-amber-300">${formatarNumero(faltamKm, 0)} km</strong> (~${Math.max(1, Math.round(faltamKm / 33))} dias)`;
         }
       }
 
@@ -1086,24 +1423,298 @@
           barraOleo.className = 'h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500';
         }
       }
+
+      // Tabela de Histórico de Trocas de Óleo
+      const corpoOleo = document.getElementById('corpo-tabela-oleo');
+      if (!corpoOleo) return;
+      corpoOleo.innerHTML = '';
+
+      const ordenadas = [...trocasOleo].sort((a, b) => {
+        if (a.isAtual !== b.isAtual) return a.isAtual ? -1 : 1;
+        return new Date(b.data).getTime() - new Date(a.data).getTime();
+      });
+
+      ordenadas.forEach((troca) => {
+        const idx = trocasOleo.indexOf(troca);
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-800/40 transition-colors cursor-pointer group';
+
+        const kmIni = troca.kmInicial || 0;
+        const kmCur = troca.isAtual ? Math.max(troca.kmAtual || kmIni, kmAtualPainel) : (troca.kmAtual || kmIni);
+        const rodados = Math.max(0, kmCur - kmIni);
+        const intervalo = Math.max(1, (troca.metaKm || kmIni + 1000) - kmIni);
+        const pct = Math.min(100, Math.max(0, Math.round((rodados / intervalo) * 100)));
+        const faltam = Math.max(0, (troca.metaKm || kmIni + 1000) - kmCur);
+        const custoKm = rodados > 0 ? ((troca.valor || 0) / rodados) : ((troca.valor || 0) / intervalo);
+
+        const statusTag = troca.isAtual
+          ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">Óleo Novo</span>`
+          : `<span class="px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-slate-300 border border-slate-700">Ciclo Concluído</span>`;
+
+        const filtroTag = troca.trocouFiltro
+          ? `<span class="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 ml-1.5">🔧 Peneira/Filtro</span>`
+          : '';
+
+        const progressoCol = troca.isAtual
+          ? `<div class="inline-flex flex-col items-center px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 text-[10px]">
+              <span class="font-bold">${pct}% usado</span>
+              <span class="text-[9px] text-slate-400">${faltam <= 0 ? 'Troca vencida' : `Faltam ${formatarNumero(faltam, 0)} km`}</span>
+             </div>`
+          : `<div class="inline-flex flex-col items-center px-2 py-0.5 rounded bg-slate-800/80 text-slate-300 text-[10px]">
+              <span class="font-bold">Finalizado</span>
+              <span class="text-[9px] text-slate-500">${formatarNumero(rodados, 0)} km rodados</span>
+             </div>`;
+
+        tr.innerHTML = `
+          <td class="py-3 px-4 whitespace-nowrap text-white font-medium" onclick="editarRegistroOleo(${idx})">
+            <div class="flex items-center gap-1">
+              <span>${formatarData(troca.data)}</span>
+              ${statusTag}
+            </div>
+            <div class="mt-1 flex items-center text-[10px] text-slate-300 font-sans">
+              <span>${troca.tipoOleo || 'Mobil Super Moto 10W-30'}</span>
+              ${filtroTag}
+            </div>
+            <div class="text-[10px] text-slate-400 mt-0.5 font-sans">${troca.obs || ''}</div>
+          </td>
+          <td class="py-3 px-3 text-slate-200" onclick="editarRegistroOleo(${idx})">
+            <div class="font-semibold text-white">${formatarNumero(kmIni, 0)} km</div>
+            <div class="text-[9px] text-slate-500 font-sans">na troca</div>
+          </td>
+          <td class="py-3 px-3 text-amber-300 font-bold" onclick="editarRegistroOleo(${idx})">
+            <div class="text-amber-300 font-bold">${formatarNumero(kmCur, 0)} km</div>
+            <div class="text-[9px] text-slate-500 font-sans">${troca.isAtual ? 'painel agora' : 'km substituído'}</div>
+          </td>
+          <td class="py-3 px-3" onclick="editarRegistroOleo(${idx})">
+            <span class="text-emerald-400 font-bold text-sm">+${formatarNumero(rodados, 0)} km</span>
+          </td>
+          <td class="py-3 px-3 text-white" onclick="editarRegistroOleo(${idx})">
+            <div class="font-bold text-white">${formatarNumero(troca.metaKm, 0)} km</div>
+            <div class="text-[10px] text-slate-400 font-sans">ciclo de ${formatarNumero(intervalo, 0)} km</div>
+          </td>
+          <td class="py-3 px-3 text-center" onclick="editarRegistroOleo(${idx})">${progressoCol}</td>
+          <td class="py-3 px-3" onclick="editarRegistroOleo(${idx})">
+            <div class="font-bold text-white">${formatarMoeda(troca.valor)}</div>
+            <div class="text-[10px] text-amber-400">${formatarMoeda(custoKm)} / km</div>
+          </td>
+          <td class="py-3 px-4 text-right whitespace-nowrap">
+            <button onclick="editarRegistroOleo(${idx})" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-semibold cursor-pointer">
+              ✏️ Editar
+            </button>
+          </td>
+        `;
+
+        corpoOleo.appendChild(tr);
+      });
     }
 
-    function editarMetaOleo() {
-      const novo = prompt('Defina o KM para a próxima troca de óleo da Fan 2013:', metaKmOleo);
-      if (novo !== null && novo.trim() !== '') {
-        const val = parseFloat(novo);
-        if (!isNaN(val) && val > 0) {
-          metaKmOleo = val;
-          salvarStorage('meta-oleo');
-          renderizarOleo();
+    // --- MODAIS DE ÓLEO (ÓLEO NOVO & EDIÇÃO) ---
+    let intervaloNovoOleoAtual = 1000;
+
+    function abrirModalNovoOleo() {
+      const kmAtual = getKmAtualPainel();
+      const hoje = new Date().toISOString().split('T')[0];
+      intervaloNovoOleoAtual = 1000;
+
+      document.getElementById('oleo-novo-data').value = hoje;
+      document.getElementById('oleo-novo-km').value = kmAtual;
+      document.getElementById('oleo-novo-meta').value = kmAtual + 1000;
+      document.getElementById('oleo-novo-valor').value = '45.00';
+      document.getElementById('oleo-novo-tipo').value = 'Mobil Super Moto 10W-30';
+      document.getElementById('oleo-novo-filtro').checked = true;
+      document.getElementById('oleo-novo-obs').value = '';
+
+      const modal = document.getElementById('modal-oleo-novo');
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+    }
+    window.abrirModalNovoOleo = abrirModalNovoOleo;
+
+    function fecharModalNovoOleo() {
+      const modal = document.getElementById('modal-oleo-novo');
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+    window.fecharModalNovoOleo = fecharModalNovoOleo;
+
+    function definirIntervaloNovoOleo(interv) {
+      intervaloNovoOleoAtual = interv;
+      const km = parseFloat(document.getElementById('oleo-novo-km').value) || 0;
+      document.getElementById('oleo-novo-meta').value = km + interv;
+    }
+    window.definirIntervaloNovoOleo = definirIntervaloNovoOleo;
+
+    function atualizarMetaNovoOleoPorKm() {
+      const km = parseFloat(document.getElementById('oleo-novo-km').value) || 0;
+      document.getElementById('oleo-novo-meta').value = km + intervaloNovoOleoAtual;
+    }
+    window.atualizarMetaNovoOleoPorKm = atualizarMetaNovoOleoPorKm;
+
+    function salvarNovoOleo(e) {
+      if (e) e.preventDefault();
+      const data = document.getElementById('oleo-novo-data').value;
+      const kmTroca = parseFloat(document.getElementById('oleo-novo-km').value) || getKmAtualPainel();
+      const metaKm = parseFloat(document.getElementById('oleo-novo-meta').value) || (kmTroca + 1000);
+      const valor = parseFloat(document.getElementById('oleo-novo-valor').value) || 0;
+      const tipoOleo = document.getElementById('oleo-novo-tipo').value.trim() || 'Mobil Super Moto 10W-30';
+      const trocouFiltro = document.getElementById('oleo-novo-filtro').checked;
+      const obs = document.getElementById('oleo-novo-obs').value.trim();
+
+      // Fecha os ciclos anteriores sem acumular
+      trocasOleo.forEach(t => {
+        if (t.isAtual) {
+          const kmFinal = Math.max(t.kmInicial, kmTroca);
+          const rodados = Math.max(0, kmFinal - t.kmInicial);
+          t.kmAtual = kmFinal;
+          t.custoKm = rodados > 0 ? parseFloat((t.valor / rodados).toFixed(2)) : t.custoKm;
+          t.isAtual = false;
         }
+      });
+
+      const kmPainel = Math.max(kmTroca, getKmAtualPainel());
+      const rodadosNovo = Math.max(0, kmPainel - kmTroca);
+      const intervalo = Math.max(100, metaKm - kmTroca);
+
+      const novoRegistroOleo = {
+        id: 'oleo-' + Date.now(),
+        data: data,
+        kmInicial: kmTroca,
+        kmAtual: kmPainel,
+        intervaloKm: intervalo,
+        metaKm: Math.max(kmTroca + 100, metaKm),
+        tipoOleo: tipoOleo,
+        valor: valor,
+        custoKm: rodadosNovo > 0 ? parseFloat((valor / rodadosNovo).toFixed(2)) : parseFloat((valor / intervalo).toFixed(2)),
+        trocouFiltro: trocouFiltro,
+        isAtual: true,
+        obs: obs
+      };
+
+      trocasOleo.unshift(novoRegistroOleo);
+      salvarStorage('nova-troca-oleo');
+      renderizar();
+      fecharModalNovoOleo();
+      mostrarToast('🛢️ Óleo Novo registrado! Contagem reiniciada e histórico salvo.');
+    }
+    window.salvarNovoOleo = salvarNovoOleo;
+
+    function editarOleoAtivo() {
+      const ativo = getOleoAtivo();
+      if (!ativo) {
+        abrirModalNovoOleo();
+        return;
+      }
+      const idx = trocasOleo.indexOf(ativo);
+      if (idx >= 0) editarRegistroOleo(idx);
+    }
+    window.editarOleoAtivo = editarOleoAtivo;
+
+    function editarRegistroOleo(idx) {
+      const troca = trocasOleo[idx];
+      if (!troca) return;
+
+      document.getElementById('oleo-edit-index').value = idx;
+      document.getElementById('oleo-edit-data').value = troca.data || '';
+      document.getElementById('oleo-edit-km-inicial').value = troca.kmInicial || 0;
+      document.getElementById('oleo-edit-km-atual').value = troca.isAtual ? Math.max(troca.kmAtual || troca.kmInicial, getKmAtualPainel()) : (troca.kmAtual || troca.kmInicial);
+      document.getElementById('oleo-edit-meta').value = troca.metaKm || ((troca.kmInicial || 0) + 1000);
+      document.getElementById('oleo-edit-tipo').value = troca.tipoOleo || 'Mobil Super Moto 10W-30';
+      document.getElementById('oleo-edit-valor').value = troca.valor || 0;
+      document.getElementById('oleo-edit-filtro').checked = Boolean(troca.trocouFiltro);
+      document.getElementById('oleo-edit-atual').checked = Boolean(troca.isAtual);
+      document.getElementById('oleo-edit-obs').value = troca.obs || '';
+
+      recalcularEdicaoOleo();
+
+      const modal = document.getElementById('modal-oleo-editar');
+      modal.classList.remove('hidden');
+      modal.style.display = 'flex';
+    }
+    window.editarRegistroOleo = editarRegistroOleo;
+
+    function fecharModalEditarOleo() {
+      const modal = document.getElementById('modal-oleo-editar');
+      modal.classList.add('hidden');
+      modal.style.display = 'none';
+    }
+    window.fecharModalEditarOleo = fecharModalEditarOleo;
+
+    function recalcularEdicaoOleo() {
+      const ini = parseFloat(document.getElementById('oleo-edit-km-inicial').value) || 0;
+      const cur = parseFloat(document.getElementById('oleo-edit-km-atual').value) || 0;
+      const meta = parseFloat(document.getElementById('oleo-edit-meta').value) || (ini + 1000);
+      const valor = parseFloat(document.getElementById('oleo-edit-valor').value) || 0;
+
+      const dist = Math.max(0, cur - ini);
+      const interv = Math.max(100, meta - ini);
+      const custo = dist > 0 ? (valor / dist).toFixed(2) : (valor / interv).toFixed(2);
+
+      document.getElementById('oleo-edit-calc-dist').innerText = '+' + formatarNumero(dist, 0) + ' km';
+      document.getElementById('oleo-edit-calc-interv').innerText = formatarNumero(interv, 0) + ' km';
+      document.getElementById('oleo-edit-calc-custo').innerText = 'R$ ' + custo + '/km';
+    }
+    window.recalcularEdicaoOleo = recalcularEdicaoOleo;
+
+    function salvarEdicaoOleo(e) {
+      if (e) e.preventDefault();
+      const idx = parseInt(document.getElementById('oleo-edit-index').value);
+      if (isNaN(idx) || !trocasOleo[idx]) return;
+
+      const ini = parseFloat(document.getElementById('oleo-edit-km-inicial').value) || 0;
+      const cur = Math.max(ini, parseFloat(document.getElementById('oleo-edit-km-atual').value) || ini);
+      const meta = Math.max(ini + 100, parseFloat(document.getElementById('oleo-edit-meta').value) || (ini + 1000));
+      const valor = parseFloat(document.getElementById('oleo-edit-valor').value) || 0;
+      const isAtual = document.getElementById('oleo-edit-atual').checked;
+
+      if (isAtual) {
+        trocasOleo.forEach((t, i) => {
+          if (i !== idx) t.isAtual = false;
+        });
+      }
+
+      const rodados = Math.max(0, cur - ini);
+      const interv = meta - ini;
+
+      trocasOleo[idx] = {
+        ...trocasOleo[idx],
+        data: document.getElementById('oleo-edit-data').value,
+        kmInicial: ini,
+        kmAtual: cur,
+        intervaloKm: interv,
+        metaKm: meta,
+        tipoOleo: document.getElementById('oleo-edit-tipo').value.trim() || 'Mobil Super Moto 10W-30',
+        valor: valor,
+        custoKm: rodados > 0 ? parseFloat((valor / rodados).toFixed(2)) : parseFloat((valor / interv).toFixed(2)),
+        trocouFiltro: document.getElementById('oleo-edit-filtro').checked,
+        isAtual: isAtual,
+        obs: document.getElementById('oleo-edit-obs').value.trim()
+      };
+
+      salvarStorage('editar-troca-oleo');
+      renderizar();
+      fecharModalEditarOleo();
+      mostrarToast('✅ Registro de óleo atualizado!');
+    }
+    window.salvarEdicaoOleo = salvarEdicaoOleo;
+
+    function excluirEdicaoOleo() {
+      const idx = parseInt(document.getElementById('oleo-edit-index').value);
+      if (isNaN(idx) || !trocasOleo[idx]) return;
+      if (confirm('Deseja realmente excluir este registro de troca de óleo?')) {
+        trocasOleo.splice(idx, 1);
+        if (trocasOleo.length > 0 && !trocasOleo.some(t => t.isAtual)) {
+          trocasOleo[0].isAtual = true;
+        }
+        salvarStorage('excluir-troca-oleo');
+        renderizar();
+        fecharModalEditarOleo();
+        mostrarToast('🗑️ Registro de óleo excluído.');
       }
     }
+    window.excluirEdicaoOleo = excluirEdicaoOleo;
 
-    // --- FUNÇÕES DE EDIÇÃO E MODAIS ---
-
+    // --- FUNÇÕES DE EDIÇÃO E MODAIS DE GASOLINA ---
     function editarRegistro(index) {
-      editandoIndex = index;
       const reg = registros[index];
       if (!reg) return;
 
@@ -1132,7 +1743,6 @@
       const modal = document.getElementById('modal-editar');
       modal.classList.add('hidden');
       modal.style.display = 'none';
-      editandoIndex = null;
     }
     window.fecharModalEditar = fecharModalEditar;
 
@@ -1213,6 +1823,14 @@
         obs: document.getElementById('edit-obs').value
       };
 
+      // Atualiza também o KM do óleo ativo se for o ciclo atual
+      if (registros[idx].isAtual) {
+        const oleoAtivo = getOleoAtivo();
+        if (oleoAtivo) {
+          oleoAtivo.kmAtual = Math.max(oleoAtivo.kmInicial, cur);
+        }
+      }
+
       salvarStorage('editar-abastecimento');
       renderizar();
       fecharModalEditar();
@@ -1225,6 +1843,9 @@
       if (isNaN(idx) || !registros[idx]) return;
       if (confirm('Deseja realmente excluir este abastecimento?')) {
         registros.splice(idx, 1);
+        if (registros.length > 0 && !registros.some(r => r.isAtual)) {
+          registros[0].isAtual = true;
+        }
         salvarStorage('excluir-abastecimento');
         renderizar();
         fecharModalEditar();
@@ -1235,8 +1856,7 @@
 
     // --- NOVO ABASTECIMENTO ---
     function abrirModalNovo() {
-      const atual = registros.find(r => r.isAtual) || registros[0];
-      const ultimoKm = atual ? (atual.kmAtual || atual.kmInicial || 83712) : 83712;
+      const ultimoKm = getKmAtualPainel();
       const hoje = new Date().toISOString().split('T')[0];
 
       document.getElementById('novo-data').value = hoje;
@@ -1296,7 +1916,21 @@
       const isCheio = document.getElementById('novo-cheio').checked;
       const obs = document.getElementById('novo-obs').value;
 
-      registros.forEach(r => r.isAtual = false);
+      registros.forEach(r => {
+        if (r.isAtual) {
+          const kmFinal = Math.max(r.kmAtual || r.kmInicial, km);
+          const dist = Math.max(0, kmFinal - r.kmInicial);
+          r.kmAtual = kmFinal;
+          r.kmRodados = dist;
+          if (dist > 0 && r.litros > 0 && r.isTanqueCheio !== false) {
+            r.mediaKml = parseFloat((dist / r.litros).toFixed(1));
+          }
+          if (dist > 0) {
+            r.custoKm = parseFloat((r.total / dist).toFixed(2));
+          }
+          r.isAtual = false;
+        }
+      });
 
       const novo = {
         id: Date.now().toString(),
@@ -1316,6 +1950,13 @@
       };
 
       registros.unshift(novo);
+
+      // Reflete o novo KM no óleo ativo
+      const oleoAtivo = getOleoAtivo();
+      if (oleoAtivo) {
+        oleoAtivo.kmAtual = Math.max(oleoAtivo.kmInicial, km);
+      }
+
       salvarStorage('novo-abastecimento');
       renderizar();
       fecharModalNovo();
@@ -1325,9 +1966,7 @@
 
     // --- CALIBRAR KM ---
     function abrirModalCalibrarKm() {
-      const atual = registros.find(r => r.isAtual) || registros[0];
-      const kmAtual = atual ? (atual.kmAtual || atual.kmInicial || 83712) : 83712;
-      document.getElementById('calibrar-km-input').value = kmAtual;
+      document.getElementById('calibrar-km-input').value = getKmAtualPainel();
 
       const modal = document.getElementById('modal-calibrar');
       modal.classList.remove('hidden');
@@ -1360,17 +1999,27 @@
         const ini = registros[targetIndex].kmInicial || registros[targetIndex].odometro || 83663;
         registros[targetIndex].kmAtual = novoKm;
         registros[targetIndex].kmRodados = Math.max(0, novoKm - ini);
-        salvarStorage('calibrar-km');
-        renderizar();
       }
+
+      const oleoAtivo = getOleoAtivo();
+      if (oleoAtivo) {
+        oleoAtivo.kmAtual = Math.max(oleoAtivo.kmInicial, novoKm);
+        const rodadosOleo = Math.max(0, oleoAtivo.kmAtual - oleoAtivo.kmInicial);
+        if (rodadosOleo > 0) {
+          oleoAtivo.custoKm = parseFloat(((oleoAtivo.valor || 0) / rodadosOleo).toFixed(2));
+        }
+      }
+
+      salvarStorage('calibrar-km');
+      renderizar();
       fecharModalCalibrarKm();
-      mostrarToast('⚡ Odômetro atualizado com sucesso!');
+      mostrarToast('⚡ Odômetro atualizado (combustível e óleo)!');
     }
     window.salvarCalibrarKm = salvarCalibrarKm;
 
     // --- NAVEGAÇÃO ENTRE ABAS ---
     function trocarAba(abaId) {
-      const abas = ['dashboard', 'tabela', 'simulador', 'etanol'];
+      const abas = ['dashboard', 'tabela', 'oleo', 'simulador', 'etanol'];
       abas.forEach(a => {
         const btn = document.getElementById('nav-btn-' + a);
         if (btn) {
@@ -1382,21 +2031,41 @@
         }
       });
 
+      const banner = document.getElementById('banner-painel');
       const secTabela = document.getElementById('aba-tabela');
+      const secOleo = document.getElementById('aba-oleo');
       const secSim = document.getElementById('aba-simulador');
       const secEta = document.getElementById('aba-etanol');
 
-      if (abaId === 'dashboard' || abaId === 'tabela') {
+      if (abaId === 'dashboard') {
+        if (banner) banner.classList.remove('hidden');
         if (secTabela) secTabela.classList.remove('hidden');
+        if (secOleo) secOleo.classList.remove('hidden');
+        if (secSim) secSim.classList.add('hidden');
+        if (secEta) secEta.classList.add('hidden');
+      } else if (abaId === 'tabela') {
+        if (banner) banner.classList.remove('hidden');
+        if (secTabela) secTabela.classList.remove('hidden');
+        if (secOleo) secOleo.classList.add('hidden');
+        if (secSim) secSim.classList.add('hidden');
+        if (secEta) secEta.classList.add('hidden');
+      } else if (abaId === 'oleo') {
+        if (banner) banner.classList.add('hidden');
+        if (secTabela) secTabela.classList.add('hidden');
+        if (secOleo) secOleo.classList.remove('hidden');
         if (secSim) secSim.classList.add('hidden');
         if (secEta) secEta.classList.add('hidden');
       } else if (abaId === 'simulador') {
+        if (banner) banner.classList.add('hidden');
         if (secTabela) secTabela.classList.add('hidden');
+        if (secOleo) secOleo.classList.add('hidden');
         if (secSim) secSim.classList.remove('hidden');
         if (secEta) secEta.classList.add('hidden');
         atualizarSimulador();
       } else if (abaId === 'etanol') {
+        if (banner) banner.classList.add('hidden');
         if (secTabela) secTabela.classList.add('hidden');
+        if (secOleo) secOleo.classList.add('hidden');
         if (secSim) secSim.classList.add('hidden');
         if (secEta) secEta.classList.remove('hidden');
         atualizarEtanol();
@@ -1460,7 +2129,7 @@
     }
     window.atualizarEtanol = atualizarEtanol;
 
-    // --- EXPORTAR CSV ---
+    // --- EXPORTAR CSV (GASOLINA E ÓLEO) ---
     function exportarCSV() {
       if (!registros || registros.length === 0) {
         alert('Nenhum registro para exportar.');
@@ -1490,13 +2159,51 @@
       const blob = new Blob(['\uFEFF' + cabecalho + linhas], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
-      link.setAttribute('download', `autokm_fan2013_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute('download', `autokm_gasolina_fan2013_${new Date().toISOString().split('T')[0]}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      mostrarToast('📥 Planilha CSV exportada com sucesso!');
+      mostrarToast('📥 Planilha CSV de gasolina exportada!');
     }
     window.exportarCSV = exportarCSV;
+
+    function exportarOleoCSV() {
+      if (!trocasOleo || trocasOleo.length === 0) {
+        alert('Nenhum registro de óleo para exportar.');
+        return;
+      }
+      const cabecalho = 'ID;Data;Tipo de Oleo;KM Inicial;KM Atual/Troca;KM Rodados;Intervalo (KM);Meta Proxima Troca (KM);Valor (R$);Custo por KM (R$);Filtro/Peneira;Status;Observacoes\n';
+      const linhas = trocasOleo.map(t => {
+        const kmIni = t.kmInicial || 0;
+        const kmCur = t.isAtual ? Math.max(t.kmAtual || kmIni, getKmAtualPainel()) : (t.kmAtual || kmIni);
+        const rodados = Math.max(0, kmCur - kmIni);
+        return [
+          t.id,
+          t.data,
+          `"${(t.tipoOleo || '').replace(/"/g, '""')}"`,
+          kmIni,
+          kmCur,
+          rodados,
+          t.intervaloKm || (t.metaKm - kmIni),
+          t.metaKm,
+          (t.valor || 0).toString().replace('.', ','),
+          (t.custoKm || 0).toString().replace('.', ','),
+          t.trocouFiltro ? 'SIM' : 'NAO',
+          t.isAtual ? 'Oleo Novo' : 'Ciclo Concluido',
+          `"${(t.obs || '').replace(/"/g, '""')}"`
+        ].join(';');
+      }).join('\n');
+
+      const blob = new Blob(['\uFEFF' + cabecalho + linhas], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', `autokm_oleo_fan2013_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      mostrarToast('📥 Planilha CSV de óleo exportada!');
+    }
+    window.exportarOleoCSV = exportarOleoCSV;
 
     // --- SINCRONIZAÇÃO PC <-> CELULAR ---
     async function forcarSincronizacao(abrirModalApos = false) {
@@ -1524,7 +2231,7 @@
         if (btnModal) btnModal.innerHTML = '<span>✅</span> <span>Nuvem Sincronizada com Sucesso!</span>';
         if (dot) dot.className = 'w-2 h-2 rounded-full bg-emerald-400';
         if (txt) txt.innerText = 'Nuvem Conectada';
-        mostrarToast('✅ Sincronizado com sucesso! Dados atualizados no PC e celular.');
+        mostrarToast('✅ Sincronizado com sucesso! Gasolina e óleo atualizados.');
       } catch (e) {
         console.error('Erro na sincronização:', e);
         if (btn) btn.innerHTML = '<span>⚠️</span> <span>Erro Nuvem</span>';
@@ -1568,7 +2275,7 @@
     function gerarSyncLink() {
       let syncUrl = '';
       try {
-        const jsonStr = JSON.stringify(registros);
+        const jsonStr = JSON.stringify({ registros, trocasOleo });
         const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
         if (window.location.protocol.startsWith('http')) {
           syncUrl = window.location.origin + window.location.pathname + '?sync=' + base64;
@@ -1594,14 +2301,20 @@
         prompt('Copie o link abaixo para abrir no celular:', syncUrl);
       });
     }
+    window.copiarLinkSync = copiarLinkSync;
 
     function baixarHtmlAtualizado() {
       let docHtml = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
       const jsonAtual = JSON.stringify(registros, null, 2);
+      const jsonOleoAtual = JSON.stringify(trocasOleo, null, 2);
       
       docHtml = docHtml.replace(
         /const DADOS_INICIAIS = \[[\s\S]*?\];/,
         `const DADOS_INICIAIS = ${jsonAtual};`
+      );
+      docHtml = docHtml.replace(
+        /const DADOS_INICIAIS_OLEO = \[[\s\S]*?\];/,
+        `const DADOS_INICIAIS_OLEO = ${jsonOleoAtual};`
       );
 
       const blob = new Blob([docHtml], { type: 'text/html;charset=utf-8' });
@@ -1612,6 +2325,7 @@
       a.click();
       document.body.removeChild(a);
     }
+    window.baixarHtmlAtualizado = baixarHtmlAtualizado;
 
     function atualizarStatusNuvem(status) {
       const dot = document.getElementById('dot-cloud-status');
@@ -1681,6 +2395,7 @@
         const docRef = doc(db, 'vehicles', 'fan2013');
         await setDoc(docRef, {
           registros: window.registros,
+          trocasOleo: window.trocasOleo || [],
           metaKmOleo: window.metaKmOleo || 84400,
           ultimaTrocaKmOleo: window.ultimaTrocaKmOleo || 83400,
           updatedAt: new Date().toISOString(),
@@ -1693,27 +2408,48 @@
       }
     };
 
+    function aplicarDadosNuvem(dadosNuvem) {
+      let mudou = false;
+
+      if (dadosNuvem && Array.isArray(dadosNuvem.registros) && dadosNuvem.registros.length > 0) {
+        if (JSON.stringify(dadosNuvem.registros) !== JSON.stringify(window.registros)) {
+          window.registros = dadosNuvem.registros;
+          localStorage.setItem('autokm_dados_v6', JSON.stringify(window.registros));
+          mudou = true;
+        }
+      }
+
+      if (dadosNuvem && Array.isArray(dadosNuvem.trocasOleo) && dadosNuvem.trocasOleo.length > 0) {
+        if (JSON.stringify(dadosNuvem.trocasOleo) !== JSON.stringify(window.trocasOleo)) {
+          window.trocasOleo = dadosNuvem.trocasOleo;
+          localStorage.setItem('autokm_trocas_oleo_v1', JSON.stringify(window.trocasOleo));
+          mudou = true;
+        }
+      }
+
+      if (dadosNuvem.metaKmOleo) {
+        window.metaKmOleo = dadosNuvem.metaKmOleo;
+        localStorage.setItem('autokm_meta_oleo', window.metaKmOleo);
+      }
+      if (dadosNuvem.ultimaTrocaKmOleo) {
+        window.ultimaTrocaKmOleo = dadosNuvem.ultimaTrocaKmOleo;
+        localStorage.setItem('autokm_ultima_troca_oleo', window.ultimaTrocaKmOleo);
+      }
+
+      if (mudou && typeof window.renderizar === 'function') {
+        window.renderizar();
+      }
+      return mudou;
+    }
+
     window.buscarNuvem = async function() {
       if (!db) return false;
       try {
         const docRef = doc(db, 'vehicles', 'fan2013');
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          const dadosNuvem = docSnap.data();
-          if (dadosNuvem && Array.isArray(dadosNuvem.registros) && dadosNuvem.registros.length > 0) {
-            window.registros = dadosNuvem.registros;
-            if (dadosNuvem.metaKmOleo) {
-              window.metaKmOleo = dadosNuvem.metaKmOleo;
-              localStorage.setItem('autokm_meta_oleo', window.metaKmOleo);
-            }
-            if (dadosNuvem.ultimaTrocaKmOleo) {
-              window.ultimaTrocaKmOleo = dadosNuvem.ultimaTrocaKmOleo;
-              localStorage.setItem('autokm_ultima_troca_oleo', window.ultimaTrocaKmOleo);
-            }
-            localStorage.setItem('autokm_dados_v6', JSON.stringify(window.registros));
-            if (typeof window.renderizar === 'function') window.renderizar();
-            return true;
-          }
+          aplicarDadosNuvem(docSnap.data());
+          return true;
         }
       } catch (err) {
         console.error("Erro ao buscar da nuvem:", err);
@@ -1725,31 +2461,9 @@
       const docRef = doc(db, 'vehicles', 'fan2013');
       onSnapshot(docRef, (docSnap) => {
         if (docSnap.exists()) {
-          const dadosNuvem = docSnap.data();
-          if (dadosNuvem && Array.isArray(dadosNuvem.registros) && dadosNuvem.registros.length > 0) {
-            const strNuvem = JSON.stringify(dadosNuvem.registros);
-            const strLocal = JSON.stringify(window.registros);
-            
-            if (strNuvem !== strLocal) {
-              window.registros = dadosNuvem.registros;
-              if (dadosNuvem.metaKmOleo) {
-                window.metaKmOleo = dadosNuvem.metaKmOleo;
-                localStorage.setItem('autokm_meta_oleo', window.metaKmOleo);
-              }
-              if (dadosNuvem.ultimaTrocaKmOleo) {
-                window.ultimaTrocaKmOleo = dadosNuvem.ultimaTrocaKmOleo;
-                localStorage.setItem('autokm_ultima_troca_oleo', window.ultimaTrocaKmOleo);
-              }
-              
-              localStorage.setItem('autokm_dados_v6', JSON.stringify(window.registros));
-              
-              if (typeof window.renderizar === 'function') {
-                window.renderizar();
-              }
-              if (typeof window.mostrarToast === 'function') {
-                window.mostrarToast('☁️ Dados sincronizados da Nuvem!');
-              }
-            }
+          const mudou = aplicarDadosNuvem(docSnap.data());
+          if (mudou && typeof window.mostrarToast === 'function') {
+            window.mostrarToast('☁️ Dados sincronizados da Nuvem!');
           }
           window.atualizarStatusNuvem && window.atualizarStatusNuvem('connected');
         } else {
